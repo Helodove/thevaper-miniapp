@@ -198,13 +198,13 @@ function StockBlock({
 
 // ─── ProductPage ──────────────────────────────────────────────────────────────
 export function ProductPage() {
-  const { productId } = useParams<{ storeId: string; categoryId: string; productId: string }>();
+  const { productId } = useParams<{ storeId: string; productId: string }>();
   const { items, add, increment, decrement } = useCartStore();
   const { selectedShop } = useShopStore();
   const cartItem = items.find((i) => i.productId === productId);
   const qty = cartItem?.quantity ?? 0;
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading, isError } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => getProduct(productId!),
     staleTime: STALE.products,
@@ -227,7 +227,21 @@ export function ProductPage() {
     );
   }
 
-  if (!product) return null;
+  if (isError || !product) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center min-h-screen gap-4 px-8 text-center"
+        style={{ background: 'var(--bg-base)' }}
+      >
+        <p className="text-[17px] font-bold" style={{ color: 'var(--text-primary)' }}>
+          Не удалось загрузить товар
+        </p>
+        <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
+          Попробуйте вернуться назад и открыть снова
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh', paddingBottom: 100 }}>

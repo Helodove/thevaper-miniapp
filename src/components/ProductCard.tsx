@@ -30,7 +30,7 @@ export function ProductCard({ product }: { product: Product }) {
       whileTap={{ scale: 0.97 }}
       onClick={() => {
         if (selectedShop) {
-          navigate(`/store/${selectedShop.id}/category/${product.categoryId}/product/${product.id}`);
+          navigate(`/store/${selectedShop.id}/product/${product.id}`);
         }
       }}
       className="cursor-pointer overflow-hidden"

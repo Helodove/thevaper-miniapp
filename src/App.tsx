@@ -96,7 +96,7 @@ export default function App() {
             <Route path="/" element={<StoreSelectPage />} />
             <Route path="/store/:storeId" element={<StoreHomePage />} />
             <Route path="/store/:storeId/category/:categoryId" element={<CategoryPage />} />
-            <Route path="/store/:storeId/category/:categoryId/product/:productId" element={<ProductPage />} />
+            <Route path="/store/:storeId/product/:productId" element={<ProductPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/search" element={<SearchPage />} />
           </Routes>
