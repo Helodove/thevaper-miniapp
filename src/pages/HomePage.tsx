@@ -16,7 +16,8 @@ function HeroBanner() {
   const navigate = useNavigate();
   return (
     <div
-      className="mx-4 rounded-[24px] overflow-hidden relative p-6 flex flex-col justify-between"
+      onClick={() => navigate('/search?q=Opal+20000')}
+      className="mx-4 rounded-[24px] overflow-hidden relative p-6 flex flex-col justify-between cursor-pointer active:opacity-90"
       style={{ background: 'var(--brand-gradient)', minHeight: 160 }}
     >
       <img
@@ -30,12 +31,9 @@ function HeroBanner() {
         <h2 className="text-white text-[22px] font-extrabold leading-tight tracking-tight">
           Opal 20000
         </h2>
-        <button
-          onClick={() => navigate('/')}
-          className="mt-3 bg-white/20 text-white text-[13px] font-semibold rounded-xl px-4 py-2"
-        >
+        <div className="mt-3 bg-white/20 text-white text-[13px] font-semibold rounded-xl px-4 py-2 inline-block">
           Смотреть
-        </button>
+        </div>
       </div>
     </div>
   );

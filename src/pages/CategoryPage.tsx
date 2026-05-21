@@ -2,14 +2,13 @@ import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { getProducts } from '@/api/catalog';
+import { getProducts, getCategories } from '@/api/catalog';
 import { BrandHeader } from '@/components/BrandHeader';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { STALE } from '@/lib/queryClient';
 import { sortByStock } from '@/lib/sortByStock';
-import clsx from 'clsx';
 
 export function CategoryPage() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +21,14 @@ export function CategoryPage() {
     enabled: !!id,
   });
 
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories,
+    staleTime: STALE.categories,
+  });
+
+  const categoryTitle = categories?.find((c) => c.id === id)?.title ?? 'Каталог';
+
   const sorted = useMemo(() => {
     const items = data?.items ?? [];
     const filtered = inStock ? items.filter((p) => p.inStock) : items;
@@ -33,7 +40,7 @@ export function CategoryPage() {
       <BrandHeader />
 
       <div className="px-4 py-4" style={{ background: 'var(--brand-primary)' }}>
-        <h1 className="text-[22px] font-extrabold text-white tracking-tight">Каталог</h1>
+        <h1 className="text-[22px] font-extrabold text-white tracking-tight">{categoryTitle}</h1>
       </div>
 
       <div className="flex items-center gap-2 px-4 py-3">

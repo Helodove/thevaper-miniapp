@@ -44,12 +44,12 @@ export function CartPage() {
 
   useEffect(() => {
     if (items.length > 0) {
-      showMainButton(mainBtnText, handleOrder);
+      showMainButton(mainBtnText, handleOrder, canOrder);
     } else {
       hideMainButton(handleOrder);
     }
     return () => hideMainButton(handleOrder);
-  }, [items.length, mainBtnText, handleOrder]);
+  }, [items.length, mainBtnText, handleOrder, canOrder]);
 
   if (items.length === 0) {
     return (

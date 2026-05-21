@@ -54,7 +54,7 @@ export function initTelegram(): void {
   app.ready();
   app.expand();
   app.setHeaderColor('#1FBFAD');
-  app.setBackgroundColor('#F4FBFA');
+  app.setBackgroundColor(app.colorScheme === 'dark' ? '#0F1E1C' : '#F4FBFA');
 }
 
 export function getColorScheme(): 'light' | 'dark' {
@@ -71,13 +71,14 @@ export function haptic(kind: 'light' | 'medium' | 'success' | 'error'): void {
   }
 }
 
-export function showMainButton(text: string, onClick: () => void): void {
+export function showMainButton(text: string, onClick: () => void, enabled = true): void {
   const app = tg();
   if (!app) return;
   app.MainButton.setText(text);
-  app.MainButton.color = '#1FBFAD';
+  app.MainButton.color = enabled ? '#1FBFAD' : '#5B7572';
   app.MainButton.textColor = '#FFFFFF';
   app.MainButton.onClick(onClick);
+  enabled ? app.MainButton.enable() : app.MainButton.disable();
   app.MainButton.show();
 }
 
