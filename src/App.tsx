@@ -9,6 +9,7 @@ import { CategoryPage } from '@/pages/CategoryPage';
 import { ProductPage } from '@/pages/ProductPage';
 import { CartPage } from '@/pages/CartPage';
 import { ShopsPage } from '@/pages/ShopsPage';
+import { SearchPage } from '@/pages/SearchPage';
 
 function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   const app = tg();
@@ -97,6 +98,7 @@ export default function App() {
             <Route path="/product/:id" element={<ProductPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/shops" element={<ShopsPage />} />
+            <Route path="/search" element={<SearchPage />} />
           </Routes>
         </motion.div>
       </AnimatePresence>

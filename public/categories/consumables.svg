@@ -1,0 +1,34 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B9F36C"/>
+      <stop offset="50%" stop-color="#3FD4C2"/>
+      <stop offset="100%" stop-color="#1FBFAD"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <!-- Coil / evaporator (main) -->
+  <rect x="140" y="120" width="120" height="160" rx="20" fill="white" opacity="0.92"/>
+  <!-- Coil winding lines -->
+  <rect x="158" y="148" width="84" height="10" rx="5" fill="#1FBFAD" opacity="0.35"/>
+  <rect x="158" y="168" width="84" height="10" rx="5" fill="#1FBFAD" opacity="0.35"/>
+  <rect x="158" y="188" width="84" height="10" rx="5" fill="#1FBFAD" opacity="0.35"/>
+  <rect x="158" y="208" width="84" height="10" rx="5" fill="#1FBFAD" opacity="0.35"/>
+  <rect x="158" y="228" width="84" height="10" rx="5" fill="#1FBFAD" opacity="0.35"/>
+  <!-- Top pins -->
+  <rect x="171" y="100" width="18" height="28" rx="6" fill="white" opacity="0.85"/>
+  <rect x="211" y="100" width="18" height="28" rx="6" fill="white" opacity="0.85"/>
+  <!-- Bottom pins -->
+  <rect x="171" y="272" width="18" height="28" rx="6" fill="white" opacity="0.85"/>
+  <rect x="211" y="272" width="18" height="28" rx="6" fill="white" opacity="0.85"/>
+  <!-- Small cartridge left -->
+  <rect x="76" y="148" width="48" height="80" rx="12" fill="white" opacity="0.55"/>
+  <rect x="86" y="138" width="28" height="16" rx="6" fill="white" opacity="0.5"/>
+  <!-- Small cartridge right -->
+  <rect x="276" y="148" width="48" height="80" rx="12" fill="white" opacity="0.55"/>
+  <rect x="286" y="138" width="28" height="16" rx="6" fill="white" opacity="0.5"/>
+  <!-- Logo -->
+  <g transform="translate(352,356)" opacity="0.5">
+    <text x="0" y="0" font-family="Arial" font-weight="800" font-size="20" fill="white">V</text>
+  </g>
+</svg>

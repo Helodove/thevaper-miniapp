@@ -1,0 +1,36 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B9F36C"/>
+      <stop offset="50%" stop-color="#3FD4C2"/>
+      <stop offset="100%" stop-color="#1FBFAD"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <!-- Bottle 1 (left) -->
+  <rect x="78" y="140" width="68" height="120" rx="14" fill="white" opacity="0.9"/>
+  <rect x="88" y="120" width="48" height="28" rx="8" fill="white" opacity="0.9"/>
+  <rect x="102" y="108" width="20" height="18" rx="6" fill="white" opacity="0.85"/>
+  <!-- Dropper tip 1 -->
+  <path d="M112 108 L112 92" stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  <!-- Bottle 1 label -->
+  <rect x="88" y="175" width="48" height="44" rx="6" fill="#1FBFAD" opacity="0.2"/>
+  <!-- Bottle 2 (center, taller) -->
+  <rect x="166" y="115" width="68" height="145" rx="14" fill="white" opacity="0.95"/>
+  <rect x="176" y="93" width="48" height="30" rx="8" fill="white" opacity="0.95"/>
+  <rect x="190" y="79" width="20" height="20" rx="6" fill="white" opacity="0.9"/>
+  <path d="M200 79 L200 60" stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  <!-- Bottle 2 label -->
+  <rect x="176" y="155" width="48" height="52" rx="6" fill="#3FD4C2" opacity="0.25"/>
+  <!-- Bottle 3 (right) -->
+  <rect x="254" y="148" width="68" height="112" rx="14" fill="white" opacity="0.9"/>
+  <rect x="264" y="128" width="48" height="28" rx="8" fill="white" opacity="0.9"/>
+  <rect x="278" y="114" width="20" height="18" rx="6" fill="white" opacity="0.85"/>
+  <path d="M288 114 L288 97" stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  <!-- Bottle 3 label -->
+  <rect x="264" y="182" width="48" height="38" rx="6" fill="#B9F36C" opacity="0.3"/>
+  <!-- Logo -->
+  <g transform="translate(352,356)" opacity="0.5">
+    <text x="0" y="0" font-family="Arial" font-weight="800" font-size="20" fill="white">V</text>
+  </g>
+</svg>

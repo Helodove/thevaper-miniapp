@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
@@ -6,6 +7,7 @@ import { getCategories } from '@/api/catalog';
 import { getShops } from '@/api/shops';
 import { BrandHeader } from '@/components/BrandHeader';
 import { CategoryCard } from '@/components/CategoryCard';
+import { SearchInput } from '@/components/SearchInput';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { STALE } from '@/lib/queryClient';
@@ -41,8 +43,16 @@ function HeroBanner() {
 
 export function HomePage() {
   const navigate = useNavigate();
+  const [searchVal, setSearchVal] = useState('');
   const cats = useQuery({ queryKey: ['categories'], queryFn: getCategories, staleTime: STALE.categories });
   const shops = useQuery({ queryKey: ['shops'], queryFn: getShops, staleTime: STALE.shops });
+
+  const handleSearch = useCallback((v: string) => {
+    setSearchVal(v);
+    if (v.length >= 2) {
+      navigate(`/search?q=${encodeURIComponent(v)}`);
+    }
+  }, [navigate]);
 
   return (
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh' }}>
@@ -51,6 +61,11 @@ export function HomePage() {
       <div className="space-y-5 pb-8">
         <div className="pt-4">
           <HeroBanner />
+        </div>
+
+        {/* Поиск */}
+        <div className="px-4">
+          <SearchInput value={searchVal} onChange={handleSearch} />
         </div>
 
         {/* Категории */}

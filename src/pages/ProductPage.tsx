@@ -1,18 +1,138 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getProduct } from '@/api/catalog';
+import { getProduct, getStock } from '@/api/catalog';
+import { getShops } from '@/api/shops';
 import { formatPrice } from '@/lib/format';
-import { haptic } from '@/lib/telegram';
+import { haptic, openLink } from '@/lib/telegram';
 import { useCartStore } from '@/store/cart';
 import { QuantityStepper } from '@/components/QuantityStepper';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { STALE } from '@/lib/queryClient';
+import type { Shop } from '@/api/types';
 
+const BOT_USERNAME = 'TVcatalogbot';
+
+// ─── StockShopRow ────────────────────────────────────────────────────────────
+function StockShopRow({ shop, quantity }: { shop: Shop; quantity: number }) {
+  const inStock = quantity > 0;
+  function handleTap() {
+    haptic('light');
+    openLink(`https://yandex.ru/maps/?text=${encodeURIComponent(shop.city + ' ' + shop.address)}`);
+  }
+  return (
+    <motion.div
+      whileTap={{ scale: 0.98 }}
+      onClick={handleTap}
+      className="flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer"
+      style={{
+        background: 'var(--bg-card)',
+        boxShadow: 'var(--shadow-card)',
+        opacity: inStock ? 1 : 0.5,
+      }}
+    >
+      <div className="flex-1 min-w-0 mr-3">
+        <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+          {shop.address}
+        </p>
+        <p className="text-[12px] font-medium mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+          {shop.hours} · {shop.schedule}
+        </p>
+      </div>
+      <span
+        className="text-[12px] font-bold flex-shrink-0"
+        style={{ color: inStock ? 'var(--brand-primary)' : 'var(--text-secondary)' }}
+      >
+        {inStock ? `В наличии · ${quantity}` : 'Нет в наличии'}
+      </span>
+    </motion.div>
+  );
+}
+
+// ─── StockBlock ──────────────────────────────────────────────────────────────
+function StockBlock({ productId }: { productId: string }) {
+  const { data: stockItems, isLoading: stockLoading } = useQuery({
+    queryKey: ['stock', productId],
+    queryFn: () => getStock(productId),
+    staleTime: STALE.stock,
+  });
+  const { data: shops, isLoading: shopsLoading } = useQuery({
+    queryKey: ['shops'],
+    queryFn: getShops,
+    staleTime: STALE.shops,
+  });
+
+  if (stockLoading || shopsLoading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
+      </div>
+    );
+  }
+
+  const stockMap = new Map((stockItems ?? []).map((s) => [s.shopId, s.quantity]));
+  const allShops = shops ?? [];
+
+  // Группируем по городам
+  const byCity = allShops.reduce<Record<string, { shop: Shop; quantity: number }[]>>((acc, shop) => {
+    const qty = stockMap.get(shop.id) ?? 0;
+    (acc[shop.city] ??= []).push({ shop, quantity: qty });
+    return acc;
+  }, {});
+
+  // Сортируем внутри города: сначала с остатком
+  Object.values(byCity).forEach((arr) =>
+    arr.sort((a, b) => (b.quantity > 0 ? 1 : 0) - (a.quantity > 0 ? 1 : 0))
+  );
+
+  const hasAnyStock = [...stockMap.values()].some((q) => q > 0);
+
+  if (!hasAnyStock) {
+    return (
+      <div
+        className="rounded-2xl p-4 text-center space-y-3"
+        style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-card)' }}
+      >
+        <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
+          Сейчас нет в наличии. Свяжитесь с нами, чтобы узнать о поступлении.
+        </p>
+        <button
+          onClick={() => { haptic('light'); openLink(`https://t.me/${BOT_USERNAME}`); }}
+          className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl font-semibold text-[14px] text-white"
+          style={{ background: 'var(--brand-primary)' }}
+        >
+          <MessageCircle size={16} />
+          Написать в Telegram
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {Object.entries(byCity).map(([city, items]) => (
+        <div key={city}>
+          <p
+            className="text-[12px] font-semibold uppercase tracking-wider mb-2"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            {city}
+          </p>
+          <div className="space-y-2">
+            {items.map(({ shop, quantity }) => (
+              <StockShopRow key={shop.id} shop={shop} quantity={quantity} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── ProductPage ─────────────────────────────────────────────────────────────
 export function ProductPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { items, add, increment, decrement } = useCartStore();
   const cartItem = items.find((i) => i.productId === id);
   const qty = cartItem?.quantity ?? 0;
@@ -45,10 +165,7 @@ export function ProductPage() {
   return (
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh', paddingBottom: 100 }}>
       {/* Фото */}
-      <div
-        className="w-full aspect-square relative overflow-hidden"
-        style={{ background: 'var(--brand-gradient)' }}
-      >
+      <div className="w-full aspect-square relative overflow-hidden" style={{ background: 'var(--brand-gradient)' }}>
         {product.images[0] ? (
           <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain p-6" />
         ) : (
@@ -90,7 +207,14 @@ export function ProductPage() {
           </p>
         )}
 
-        {/* 18+ предупреждение */}
+        {/* Блок наличия по магазинам */}
+        <div className="mt-8">
+          <h2 className="text-[18px] font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+            В наличии в магазинах
+          </h2>
+          <StockBlock productId={product.id} />
+        </div>
+
         <p className="mt-6 text-[11px] text-center" style={{ color: 'var(--text-secondary)' }}>
           18+. Продажа лицам младше 18 лет запрещена.
         </p>

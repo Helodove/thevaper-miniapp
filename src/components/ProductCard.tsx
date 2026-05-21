@@ -11,16 +11,12 @@ export function ProductCard({ product }: { product: Product }) {
   const { items, add, increment, decrement } = useCartStore();
   const cartItem = items.find((i) => i.productId === product.id);
   const qty = cartItem?.quantity ?? 0;
+  const oos = !product.inStock;
 
   function handleAdd(e: React.MouseEvent) {
     e.stopPropagation();
     haptic('light');
-    add({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.images[0],
-    });
+    add({ productId: product.id, name: product.name, price: product.price, image: product.images[0] });
   }
 
   return (
@@ -28,40 +24,27 @@ export function ProductCard({ product }: { product: Product }) {
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/product/${product.id}`)}
       className="cursor-pointer overflow-hidden"
-      style={{
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-card)',
-        boxShadow: 'var(--shadow-card)',
-      }}
+      style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
     >
       {/* Фото */}
-      <div className="relative aspect-square overflow-hidden bg-[--border-soft]">
+      <div className="relative aspect-square overflow-hidden" style={{ background: 'var(--border-soft)' }}>
         {product.images[0] ? (
           <img
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-opacity"
+            style={{ opacity: oos ? 0.45 : 1 }}
             loading="lazy"
           />
         ) : (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{ background: 'var(--border-soft)' }}
-          >
+          <div className="w-full h-full flex items-center justify-center" style={{ opacity: oos ? 0.45 : 1 }}>
             <img src="/logo-thevaper-original.png" alt="" className="w-12 h-12 rounded-lg opacity-30" />
-          </div>
-        )}
-        {!product.inStock && (
-          <div className="absolute inset-0 bg-black/30 flex items-end justify-start p-2">
-            <span className="text-[11px] font-semibold text-white bg-black/50 rounded-md px-2 py-0.5">
-              Нет в наличии
-            </span>
           </div>
         )}
       </div>
 
       {/* Инфо */}
-      <div className="p-3 relative">
+      <div className="p-3">
         <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>
           {product.name}
         </p>
@@ -71,10 +54,21 @@ export function ProductCard({ product }: { product: Product }) {
           </p>
         )}
         <div className="flex items-end justify-between mt-2">
-          <p className="text-[16px] font-extrabold price" style={{ color: 'var(--brand-primary)' }}>
+          <p
+            className="text-[16px] font-extrabold price"
+            style={{ color: oos ? 'var(--text-secondary)' : 'var(--brand-primary)' }}
+          >
             {formatPrice(product.price)}
           </p>
-          {product.inStock && (
+
+          {oos ? (
+            <span
+              className="text-[10px] font-semibold rounded-lg px-2 py-1"
+              style={{ background: 'rgba(0,0,0,0.05)', color: 'var(--text-secondary)' }}
+            >
+              Нет в наличии
+            </span>
+          ) : (
             <div onClick={(e) => e.stopPropagation()}>
               {qty === 0 ? (
                 <motion.button

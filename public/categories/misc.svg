@@ -1,0 +1,25 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B9F36C"/>
+      <stop offset="50%" stop-color="#3FD4C2"/>
+      <stop offset="100%" stop-color="#1FBFAD"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <!-- T-shirt -->
+  <path d="M110 145 L145 120 L165 148 L200 138 L235 148 L255 120 L290 145 L270 175 L248 162 L248 280 L152 280 L152 162 L130 175 Z" fill="white" opacity="0.9"/>
+  <!-- V logo on shirt -->
+  <text x="184" y="230" font-family="Arial" font-weight="800" font-size="36" fill="#1FBFAD" opacity="0.45">V</text>
+  <!-- Cap -->
+  <ellipse cx="200" cy="102" rx="58" ry="18" fill="white" opacity="0.7"/>
+  <path d="M142 102 Q144 76 200 72 Q256 76 258 102Z" fill="white" opacity="0.85"/>
+  <!-- Cap brim -->
+  <path d="M134 108 Q138 118 170 114" stroke="white" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <!-- Cap button -->
+  <circle cx="200" cy="74" r="6" fill="#1FBFAD" opacity="0.5"/>
+  <!-- Logo -->
+  <g transform="translate(352,356)" opacity="0.5">
+    <text x="0" y="0" font-family="Arial" font-weight="800" font-size="20" fill="white">V</text>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B9F36C"/>
+      <stop offset="50%" stop-color="#3FD4C2"/>
+      <stop offset="100%" stop-color="#1FBFAD"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" rx="0"/>
+  <!-- Pod device body -->
+  <rect x="155" y="80" width="90" height="210" rx="22" fill="white" opacity="0.95"/>
+  <!-- Screen -->
+  <rect x="170" y="105" width="60" height="38" rx="8" fill="#1FBFAD" opacity="0.3"/>
+  <!-- Button -->
+  <rect x="170" y="155" width="60" height="14" rx="7" fill="#1FBFAD" opacity="0.4"/>
+  <!-- LED dot -->
+  <circle cx="200" cy="196" r="6" fill="#1FBFAD" opacity="0.6"/>
+  <!-- Mouthpiece -->
+  <rect x="174" y="62" width="52" height="26" rx="13" fill="white" opacity="0.85"/>
+  <!-- Cartridge outline -->
+  <rect x="162" y="240" width="76" height="40" rx="10" fill="white" opacity="0.5"/>
+  <!-- Vent slots -->
+  <rect x="178" y="255" width="44" height="4" rx="2" fill="#1FBFAD" opacity="0.4"/>
+  <rect x="178" y="265" width="44" height="4" rx="2" fill="#1FBFAD" opacity="0.4"/>
+  <!-- Second device (smaller, behind) -->
+  <rect x="268" y="120" width="62" height="155" rx="16" fill="white" opacity="0.45"/>
+  <rect x="278" y="136" width="42" height="28" rx="6" fill="#1FBFAD" opacity="0.25"/>
+  <rect x="272" y="108" width="54" height="18" rx="9" fill="white" opacity="0.4"/>
+  <!-- Logo mark bottom-right -->
+  <g transform="translate(340,350)" opacity="0.5">
+    <rect width="32" height="32" rx="6" fill="white" opacity="0.0"/>
+    <text x="16" y="22" text-anchor="middle" font-family="Arial" font-weight="800" font-size="18" fill="white">V</text>
+  </g>
+</svg>

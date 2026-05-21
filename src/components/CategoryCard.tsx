@@ -1,26 +1,31 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { haptic } from '@/lib/telegram';
+import { getCategoryCover } from '@/lib/categoryCovers';
 import type { Category } from '@/api/types';
 
 export function CategoryCard({ category }: { category: Category }) {
   const navigate = useNavigate();
+  const cover = category.cover || getCategoryCover(category.title);
+
   return (
     <motion.div
       whileTap={{ scale: 0.97 }}
-      onClick={() => navigate(`/category/${category.id}`)}
+      onClick={() => { haptic('light'); navigate(`/category/${category.id}`); }}
       className="relative aspect-square overflow-hidden cursor-pointer"
-      style={{ borderRadius: 'var(--radius-card)' }}
+      style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
     >
-      {category.cover ? (
-        <img src={category.cover} alt={category.title} className="w-full h-full object-cover" />
-      ) : (
-        <div style={{ background: 'var(--brand-gradient)' }} className="w-full h-full" />
-      )}
+      <img
+        src={cover}
+        alt={category.title}
+        className="w-full h-full object-cover"
+        loading="lazy"
+      />
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }}
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)' }}
       />
-      <p className="absolute bottom-3 left-3 right-3 text-white text-[14px] font-bold leading-tight">
+      <p className="absolute bottom-0 left-0 right-0 text-white text-[16px] font-extrabold leading-tight px-3 pb-3">
         {category.title}
       </p>
     </motion.div>
