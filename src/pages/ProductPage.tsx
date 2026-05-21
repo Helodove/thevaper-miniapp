@@ -334,28 +334,22 @@ export function ProductPage() {
           </p>
         </div>
 
-        {product.inStock ? (
-          qty === 0 ? (
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={handleAdd}
-              className="flex items-center gap-2 px-6 h-[56px] rounded-2xl font-bold text-[15px] text-white"
-              style={{ background: 'var(--brand-primary)' }}
-            >
-              <ShoppingBag size={20} strokeWidth={1.75} />
-              В корзину
-            </motion.button>
-          ) : (
-            <QuantityStepper
-              quantity={qty}
-              onIncrement={() => { haptic('light'); increment(product.id); }}
-              onDecrement={() => { haptic('light'); decrement(product.id); }}
-            />
-          )
+        {qty === 0 ? (
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={handleAdd}
+            className="flex items-center gap-2 px-6 h-[56px] rounded-2xl font-bold text-[15px] text-white"
+            style={{ background: 'var(--brand-primary)' }}
+          >
+            <ShoppingBag size={20} strokeWidth={1.75} />
+            В корзину
+          </motion.button>
         ) : (
-          <span className="text-[14px] font-semibold px-4" style={{ color: 'var(--text-secondary)' }}>
-            Нет в наличии
-          </span>
+          <QuantityStepper
+            quantity={qty}
+            onIncrement={() => { haptic('light'); increment(product.id); }}
+            onDecrement={() => { haptic('light'); decrement(product.id); }}
+          />
         )}
       </div>
     </div>

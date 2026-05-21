@@ -13,11 +13,10 @@ export function ProductCard({ product }: { product: Product }) {
   const { selectedShop } = useShopStore();
   const cartItem = items.find((i) => i.productId === product.id);
   const qty = cartItem?.quantity ?? 0;
-  // Если API вернул inStock: false, но stockByShop показывает реальный остаток — считаем в наличии
-  const hasShopStock = product.stockByShop
-    ? Object.values(product.stockByShop).some((v) => v > 0)
-    : false;
-  const oos = !product.inStock && !hasShopStock;
+
+  // Данные inStock с API ненадёжны для вариантных товаров из МойСклад.
+  // Показываем лёгкое затемнение как подсказку, но блокировать корзину не будем.
+  const likelySoldOut = !product.inStock && !product.price;
 
   function handleAdd(e: React.MouseEvent) {
     e.stopPropagation();
@@ -43,11 +42,11 @@ export function ProductCard({ product }: { product: Product }) {
             src={product.images[0]}
             alt={product.name}
             className="w-full h-full object-cover transition-opacity"
-            style={{ opacity: oos ? 0.45 : 1 }}
+            style={{ opacity: likelySoldOut ? 0.4 : 1 }}
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ opacity: oos ? 0.45 : 1 }}>
+          <div className="w-full h-full flex items-center justify-center" style={{ opacity: likelySoldOut ? 0.4 : 1 }}>
             <img src="/logo-thevaper-original.png" alt="" className="w-12 h-12 rounded-lg opacity-30" />
           </div>
         )}
@@ -64,14 +63,11 @@ export function ProductCard({ product }: { product: Product }) {
           </p>
         )}
         <div className="flex items-end justify-between mt-2">
-          <p
-            className="text-[16px] font-extrabold price"
-            style={{ color: oos ? 'var(--text-secondary)' : 'var(--brand-primary)' }}
-          >
+          <p className="text-[16px] font-extrabold price" style={{ color: 'var(--brand-primary)' }}>
             {formatPrice(product.price)}
           </p>
 
-          {oos ? (
+          {likelySoldOut ? (
             <span
               className="text-[10px] font-semibold rounded-lg px-2 py-1"
               style={{ background: 'rgba(0,0,0,0.05)', color: 'var(--text-secondary)' }}
