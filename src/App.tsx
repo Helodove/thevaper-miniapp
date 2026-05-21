@@ -4,11 +4,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { initTelegram, getColorScheme, tg } from '@/lib/telegram';
 import { queryClient } from '@/lib/queryClient';
-import { HomePage } from '@/pages/HomePage';
+import { StoreSelectPage } from '@/pages/StoreSelectPage';
+import { StoreHomePage } from '@/pages/StoreHomePage';
 import { CategoryPage } from '@/pages/CategoryPage';
 import { ProductPage } from '@/pages/ProductPage';
 import { CartPage } from '@/pages/CartPage';
-import { ShopsPage } from '@/pages/ShopsPage';
 import { SearchPage } from '@/pages/SearchPage';
 
 function AgeGate({ onConfirm }: { onConfirm: () => void }) {
@@ -86,18 +86,18 @@ export default function App() {
       <BackButtonSync />
       <AnimatePresence mode="wait">
         <motion.div
-          key={location.pathname.split('/')[1]}
+          key={location.pathname}
           initial={{ opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -16 }}
           transition={{ duration: 0.18 }}
         >
           <Routes location={location}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/category/:id" element={<CategoryPage />} />
-            <Route path="/product/:id" element={<ProductPage />} />
+            <Route path="/" element={<StoreSelectPage />} />
+            <Route path="/store/:storeId" element={<StoreHomePage />} />
+            <Route path="/store/:storeId/category/:categoryId" element={<CategoryPage />} />
+            <Route path="/store/:storeId/category/:categoryId/product/:productId" element={<ProductPage />} />
             <Route path="/cart" element={<CartPage />} />
-            <Route path="/shops" element={<ShopsPage />} />
             <Route path="/search" element={<SearchPage />} />
           </Routes>
         </motion.div>

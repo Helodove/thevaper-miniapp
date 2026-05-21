@@ -9,6 +9,7 @@ import { BrandHeader } from '@/components/BrandHeader';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import { sortByStock } from '@/lib/sortByStock';
+import { useShopStore } from '@/store/shop';
 import { haptic } from '@/lib/telegram';
 import { STALE } from '@/lib/queryClient';
 
@@ -28,6 +29,7 @@ export function SearchPage() {
   const [params] = useSearchParams();
   const initial = params.get('q') ?? '';
   const [query, setQuery] = useState(initial);
+  const { selectedShop } = useShopStore();
   const [focused, setFocused] = useState(false);
   const history = getHistory();
 
@@ -36,7 +38,7 @@ export function SearchPage() {
     if (query.length >= 2) {
       navigate(`/search?q=${encodeURIComponent(query)}`, { replace: true });
     } else if (query === '') {
-      navigate('/', { replace: true });
+      navigate(selectedShop ? `/store/${selectedShop.id}` : '/', { replace: true });
     }
   }, [query]);
 

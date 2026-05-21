@@ -11,14 +11,14 @@ import { STALE } from '@/lib/queryClient';
 import { sortByStock } from '@/lib/sortByStock';
 
 export function CategoryPage() {
-  const { id } = useParams<{ id: string }>();
+  const { categoryId } = useParams<{ storeId: string; categoryId: string }>();
   const [inStock, setInStock] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['products', id],
-    queryFn: () => getProducts({ categoryId: id }),
+    queryKey: ['products', categoryId],
+    queryFn: () => getProducts({ categoryId }),
     staleTime: STALE.products,
-    enabled: !!id,
+    enabled: !!categoryId,
   });
 
   const { data: categories } = useQuery({
@@ -27,7 +27,7 @@ export function CategoryPage() {
     staleTime: STALE.categories,
   });
 
-  const categoryTitle = categories?.find((c) => c.id === id)?.title ?? 'Каталог';
+  const categoryTitle = categories?.find((c) => c.id === categoryId)?.title ?? 'Каталог';
 
   const sorted = useMemo(() => {
     const items = data?.items ?? [];

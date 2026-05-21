@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Plus, Minus } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
+import { useShopStore } from '@/store/shop';
 import { formatPrice } from '@/lib/format';
 import { haptic } from '@/lib/telegram';
 import type { Product } from '@/api/types';
@@ -9,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 export function ProductCard({ product }: { product: Product }) {
   const navigate = useNavigate();
   const { items, add, increment, decrement } = useCartStore();
+  const { selectedShop } = useShopStore();
   const cartItem = items.find((i) => i.productId === product.id);
   const qty = cartItem?.quantity ?? 0;
   const oos = !product.inStock;
@@ -22,7 +24,11 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <motion.div
       whileTap={{ scale: 0.97 }}
-      onClick={() => navigate(`/product/${product.id}`)}
+      onClick={() => {
+        if (selectedShop) {
+          navigate(`/store/${selectedShop.id}/category/${product.categoryId}/product/${product.id}`);
+        }
+      }}
       className="cursor-pointer overflow-hidden"
       style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
     >

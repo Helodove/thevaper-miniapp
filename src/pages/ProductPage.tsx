@@ -7,6 +7,7 @@ import { getShops } from '@/api/shops';
 import { formatPrice } from '@/lib/format';
 import { haptic, openLink } from '@/lib/telegram';
 import { useCartStore } from '@/store/cart';
+import { useShopStore } from '@/store/shop';
 import { QuantityStepper } from '@/components/QuantityStepper';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { STALE } from '@/lib/queryClient';
@@ -14,8 +15,16 @@ import type { Shop } from '@/api/types';
 
 const BOT_USERNAME = 'TVcatalogbot';
 
-// ─── StockShopRow ────────────────────────────────────────────────────────────
-function StockShopRow({ shop, quantity }: { shop: Shop; quantity: number }) {
+// ─── StockShopRow ─────────────────────────────────────────────────────────────
+function StockShopRow({
+  shop,
+  quantity,
+  isSelected,
+}: {
+  shop: Shop;
+  quantity: number;
+  isSelected: boolean;
+}) {
   const inStock = quantity > 0;
   function handleTap() {
     haptic('light');
@@ -27,15 +36,26 @@ function StockShopRow({ shop, quantity }: { shop: Shop; quantity: number }) {
       onClick={handleTap}
       className="flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer"
       style={{
-        background: 'var(--bg-card)',
+        background: isSelected ? 'color-mix(in srgb, var(--brand-primary) 8%, var(--bg-card))' : 'var(--bg-card)',
         boxShadow: 'var(--shadow-card)',
+        border: isSelected ? '1.5px solid var(--brand-primary)' : '1.5px solid transparent',
         opacity: inStock ? 1 : 0.5,
       }}
     >
       <div className="flex-1 min-w-0 mr-3">
-        <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-          {shop.address}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+            {shop.address}
+          </p>
+          {isSelected && (
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+              style={{ background: 'var(--brand-primary)', color: 'white' }}
+            >
+              Ваш магазин
+            </span>
+          )}
+        </div>
         <p className="text-[12px] font-medium mt-0.5" style={{ color: 'var(--text-secondary)' }}>
           {shop.hours} · {shop.schedule}
         </p>
@@ -50,8 +70,8 @@ function StockShopRow({ shop, quantity }: { shop: Shop; quantity: number }) {
   );
 }
 
-// ─── StockBlock ──────────────────────────────────────────────────────────────
-function StockBlock({ productId }: { productId: string }) {
+// ─── StockBlock ───────────────────────────────────────────────────────────────
+function StockBlock({ productId, selectedShopId }: { productId: string; selectedShopId?: string }) {
   const { data: stockItems, isLoading: stockLoading } = useQuery({
     queryKey: ['stock', productId],
     queryFn: () => getStock(productId),
@@ -74,16 +94,19 @@ function StockBlock({ productId }: { productId: string }) {
   const stockMap = new Map((stockItems ?? []).map((s) => [s.shopId, s.quantity]));
   const allShops = shops ?? [];
 
-  // Группируем по городам
+  // Группируем по городам, выбранный магазин — первым в своём городе
   const byCity = allShops.reduce<Record<string, { shop: Shop; quantity: number }[]>>((acc, shop) => {
     const qty = stockMap.get(shop.id) ?? 0;
     (acc[shop.city] ??= []).push({ shop, quantity: qty });
     return acc;
   }, {});
 
-  // Сортируем внутри города: сначала с остатком
   Object.values(byCity).forEach((arr) =>
-    arr.sort((a, b) => (b.quantity > 0 ? 1 : 0) - (a.quantity > 0 ? 1 : 0))
+    arr.sort((a, b) => {
+      if (a.shop.id === selectedShopId) return -1;
+      if (b.shop.id === selectedShopId) return 1;
+      return (b.quantity > 0 ? 1 : 0) - (a.quantity > 0 ? 1 : 0);
+    })
   );
 
   const hasAnyStock = [...stockMap.values()].some((q) => q > 0);
@@ -121,7 +144,12 @@ function StockBlock({ productId }: { productId: string }) {
           </p>
           <div className="space-y-2">
             {items.map(({ shop, quantity }) => (
-              <StockShopRow key={shop.id} shop={shop} quantity={quantity} />
+              <StockShopRow
+                key={shop.id}
+                shop={shop}
+                quantity={quantity}
+                isSelected={shop.id === selectedShopId}
+              />
             ))}
           </div>
         </div>
@@ -130,18 +158,19 @@ function StockBlock({ productId }: { productId: string }) {
   );
 }
 
-// ─── ProductPage ─────────────────────────────────────────────────────────────
+// ─── ProductPage ──────────────────────────────────────────────────────────────
 export function ProductPage() {
-  const { id } = useParams<{ id: string }>();
+  const { productId } = useParams<{ storeId: string; categoryId: string; productId: string }>();
   const { items, add, increment, decrement } = useCartStore();
-  const cartItem = items.find((i) => i.productId === id);
+  const { selectedShop } = useShopStore();
+  const cartItem = items.find((i) => i.productId === productId);
   const qty = cartItem?.quantity ?? 0;
 
   const { data: product, isLoading } = useQuery({
-    queryKey: ['product', id],
-    queryFn: () => getProduct(id!),
+    queryKey: ['product', productId],
+    queryFn: () => getProduct(productId!),
     staleTime: STALE.products,
-    enabled: !!id,
+    enabled: !!productId,
   });
 
   function handleAdd() {
@@ -207,12 +236,12 @@ export function ProductPage() {
           </p>
         )}
 
-        {/* Блок наличия по магазинам */}
+        {/* Блок наличия */}
         <div className="mt-8">
           <h2 className="text-[18px] font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
             В наличии в магазинах
           </h2>
-          <StockBlock productId={product.id} />
+          <StockBlock productId={product.id} selectedShopId={selectedShop?.id} />
         </div>
 
         <p className="mt-6 text-[11px] text-center" style={{ color: 'var(--text-secondary)' }}>

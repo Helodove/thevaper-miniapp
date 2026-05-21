@@ -2,16 +2,25 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { haptic } from '@/lib/telegram';
 import { getCategoryCover } from '@/lib/categoryCovers';
+import { useShopStore } from '@/store/shop';
 import type { Category } from '@/api/types';
 
 export function CategoryCard({ category }: { category: Category }) {
   const navigate = useNavigate();
+  const { selectedShop } = useShopStore();
   const cover = category.cover || getCategoryCover(category.title);
+
+  function handleTap() {
+    haptic('light');
+    if (selectedShop) {
+      navigate(`/store/${selectedShop.id}/category/${category.id}`);
+    }
+  }
 
   return (
     <motion.div
       whileTap={{ scale: 0.97 }}
-      onClick={() => { haptic('light'); navigate(`/category/${category.id}`); }}
+      onClick={handleTap}
       className="relative aspect-square overflow-hidden cursor-pointer"
       style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
     >
