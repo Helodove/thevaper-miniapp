@@ -10,8 +10,8 @@ import { useCartStore } from '@/store/cart';
 import { useShopStore } from '@/store/shop';
 import { QuantityStepper } from '@/components/QuantityStepper';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { STALE } from '@/lib/queryClient';
-import type { Shop } from '@/api/types';
+import { queryClient, STALE } from '@/lib/queryClient';
+import type { Shop, Product, ProductsResponse } from '@/api/types';
 
 const BOT_USERNAME = 'TVcatalogbot';
 
@@ -204,11 +204,20 @@ export function ProductPage() {
   const cartItem = items.find((i) => i.productId === productId);
   const qty = cartItem?.quantity ?? 0;
 
-  const { data: product, isLoading, isError } = useQuery({
+  const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => getProduct(productId!),
     staleTime: STALE.products,
     enabled: !!productId,
+    // Берём продукт из кэша списков категорий/поиска — не нужен отдельный API-запрос
+    initialData: (): Product | undefined => {
+      const listCaches = queryClient.getQueriesData<ProductsResponse>({ queryKey: ['products'] });
+      for (const [, data] of listCaches) {
+        const found = data?.items?.find((p) => p.id === productId);
+        if (found) return found;
+      }
+      return undefined;
+    },
   });
 
   function handleAdd() {
@@ -227,7 +236,7 @@ export function ProductPage() {
     );
   }
 
-  if (isError || !product) {
+  if (!product) {
     return (
       <div
         className="flex flex-col items-center justify-center min-h-screen gap-4 px-8 text-center"
