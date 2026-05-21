@@ -2,19 +2,16 @@ import { motion } from 'framer-motion';
 import { openLink } from '@/lib/telegram';
 import type { Shop } from '@/api/types';
 
-function ShopPlaceholder({ address }: { address: string }) {
+function ShopPlaceholder() {
   return (
     <div
-      className="w-full flex flex-col items-center justify-center gap-2"
+      className="w-full flex items-center justify-center"
       style={{
         aspectRatio: '1.4',
         background: 'linear-gradient(135deg, #1FBFAD 0%, #169E8E 100%)',
       }}
     >
-      <img src="/logo-thevaper-original.png" alt="TheVaper" className="w-8 h-8 rounded-md opacity-90" />
-      <span className="text-white text-[11px] font-semibold opacity-80 px-2 text-center leading-tight">
-        {address}
-      </span>
+      <img src="/logo-thevaper-original.png" alt="TheVaper" className="w-12 h-12 rounded-xl opacity-90" />
     </div>
   );
 }
@@ -38,7 +35,7 @@ export function ShopCard({ shop }: { shop: Shop }) {
       {shop.cover ? (
         <img src={shop.cover} alt={shop.address} className="w-full object-cover" style={{ aspectRatio: '1.4' }} />
       ) : (
-        <ShopPlaceholder address={shop.address} />
+        <ShopPlaceholder />
       )}
       <div className="px-4 py-3 pb-4">
         <p className="text-[14px] font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>

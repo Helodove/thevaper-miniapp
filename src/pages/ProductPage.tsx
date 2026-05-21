@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ShoppingBag, ChevronLeft } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getProduct } from '@/api/catalog';
 import { formatPrice } from '@/lib/format';
@@ -45,15 +44,6 @@ export function ProductPage() {
 
   return (
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh', paddingBottom: 100 }}>
-      {/* Кнопка назад */}
-      <button
-        onClick={() => navigate(-1)}
-        className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full flex items-center justify-center"
-        style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)' }}
-      >
-        <ChevronLeft size={22} strokeWidth={2} style={{ color: 'var(--text-primary)' }} />
-      </button>
-
       {/* Фото */}
       <div
         className="w-full aspect-square relative overflow-hidden"
