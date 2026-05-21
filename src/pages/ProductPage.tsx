@@ -71,7 +71,15 @@ function StockShopRow({
 }
 
 // ─── StockBlock ───────────────────────────────────────────────────────────────
-function StockBlock({ productId, selectedShopId }: { productId: string; selectedShopId?: string }) {
+function StockBlock({
+  productId,
+  selectedShopId,
+  stockByShop,
+}: {
+  productId: string;
+  selectedShopId?: string;
+  stockByShop?: Record<string, number>;
+}) {
   const { data: stockItems, isLoading: stockLoading } = useQuery({
     queryKey: ['stock', productId],
     queryFn: () => getStock(productId),
@@ -91,8 +99,40 @@ function StockBlock({ productId, selectedShopId }: { productId: string; selected
     );
   }
 
-  const stockMap = new Map((stockItems ?? []).map((s) => [s.shopId, s.quantity]));
   const allShops = shops ?? [];
+  const stockReceived = Array.isArray(stockItems);
+
+  // Если /stock вернул пустой массив — используем stockByShop из самого товара как fallback
+  const stockMap: Map<string, number> =
+    stockReceived && stockItems!.length > 0
+      ? new Map(stockItems!.map((s) => [s.shopId, s.quantity]))
+      : stockByShop
+        ? new Map(Object.entries(stockByShop))
+        : new Map();
+
+  const hasAnyStock = stockMap.size > 0 && [...stockMap.values()].some((q) => q > 0);
+
+  // API вернул пустой массив и нет stockByShop — данные о наличии недоступны
+  if (stockReceived && stockMap.size === 0) {
+    return (
+      <div
+        className="rounded-2xl p-4 text-center space-y-3"
+        style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-card)' }}
+      >
+        <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
+          Уточните наличие у менеджера — детальная информация по складам временно недоступна.
+        </p>
+        <button
+          onClick={() => { haptic('light'); openLink(`https://t.me/${BOT_USERNAME}`); }}
+          className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl font-semibold text-[14px] text-white"
+          style={{ background: 'var(--brand-primary)' }}
+        >
+          <MessageCircle size={16} />
+          Написать в Telegram
+        </button>
+      </div>
+    );
+  }
 
   // Группируем по городам, выбранный магазин — первым в своём городе
   const byCity = allShops.reduce<Record<string, { shop: Shop; quantity: number }[]>>((acc, shop) => {
@@ -108,8 +148,6 @@ function StockBlock({ productId, selectedShopId }: { productId: string; selected
       return (b.quantity > 0 ? 1 : 0) - (a.quantity > 0 ? 1 : 0);
     })
   );
-
-  const hasAnyStock = [...stockMap.values()].some((q) => q > 0);
 
   if (!hasAnyStock) {
     return (
@@ -241,7 +279,11 @@ export function ProductPage() {
           <h2 className="text-[18px] font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
             В наличии в магазинах
           </h2>
-          <StockBlock productId={product.id} selectedShopId={selectedShop?.id} />
+          <StockBlock
+            productId={product.id}
+            selectedShopId={selectedShop?.id}
+            stockByShop={product.stockByShop}
+          />
         </div>
 
         <p className="mt-6 text-[11px] text-center" style={{ color: 'var(--text-secondary)' }}>

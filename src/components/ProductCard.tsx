@@ -13,7 +13,11 @@ export function ProductCard({ product }: { product: Product }) {
   const { selectedShop } = useShopStore();
   const cartItem = items.find((i) => i.productId === product.id);
   const qty = cartItem?.quantity ?? 0;
-  const oos = !product.inStock;
+  // Если API вернул inStock: false, но stockByShop показывает реальный остаток — считаем в наличии
+  const hasShopStock = product.stockByShop
+    ? Object.values(product.stockByShop).some((v) => v > 0)
+    : false;
+  const oos = !product.inStock && !hasShopStock;
 
   function handleAdd(e: React.MouseEvent) {
     e.stopPropagation();
