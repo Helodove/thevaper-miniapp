@@ -43,6 +43,7 @@ interface TelegramWebApp {
     selectionChanged: () => void;
   };
   openLink: (url: string) => void;
+  openTelegramLink: (url: string) => void;
 }
 
 export const tg = (): TelegramWebApp | null =>
@@ -99,4 +100,8 @@ export function sendOrder(payload: unknown): void {
 
 export function openLink(url: string): void {
   tg()?.openLink(url);
+}
+
+export function openTelegramLink(url: string): void {
+  tg()?.openTelegramLink(url);
 }

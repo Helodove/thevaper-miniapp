@@ -8,36 +8,10 @@ import { getShops } from '@/api/shops';
 import { BrandHeader } from '@/components/BrandHeader';
 import { CategoryCard } from '@/components/CategoryCard';
 import { SearchInput } from '@/components/SearchInput';
+import { LatestPostBanner } from '@/components/LatestPostBanner';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { STALE } from '@/lib/queryClient';
-
-function HeroBanner() {
-  const navigate = useNavigate();
-  return (
-    <div
-      onClick={() => navigate('/search?q=Opal+20000')}
-      className="mx-4 rounded-[24px] overflow-hidden relative p-6 flex flex-col justify-between cursor-pointer active:opacity-90"
-      style={{ background: 'var(--brand-gradient)', minHeight: 160 }}
-    >
-      <img
-        src="/logo-thevaper-original.png"
-        alt=""
-        className="absolute top-4 right-4 rounded-xl"
-        style={{ width: 40, height: 40, opacity: 0.9 }}
-      />
-      <div className="mt-auto">
-        <p className="text-white text-[13px] font-medium opacity-80 mb-1">Новинка в наличии</p>
-        <h2 className="text-white text-[22px] font-extrabold leading-tight tracking-tight">
-          Opal 20000
-        </h2>
-        <div className="mt-3 bg-white/20 text-white text-[13px] font-semibold rounded-xl px-4 py-2 inline-block">
-          Смотреть
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -58,7 +32,7 @@ export function HomePage() {
 
       <div className="space-y-5 pb-8">
         <div className="pt-4">
-          <HeroBanner />
+          <LatestPostBanner />
         </div>
 
         {/* Поиск */}
