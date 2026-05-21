@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand-primary: #1FBFAD;
+    --brand-primary-dark: #169E8E;
+    --brand-primary-light: #3FD4C2;
+    --brand-accent: #B9F36C;
+    --brand-gradient: linear-gradient(135deg, #B9F36C 0%, #3FD4C2 50%, #1FBFAD 100%);
+
+    --bg-base: #F4FBFA;
+    --bg-card: #FFFFFF;
+    --text-primary: #0F2E2A;
+    --text-secondary: #5B7572;
+    --text-on-brand: #FFFFFF;
+
+    --border-soft: #E3F0EE;
+    --shadow-card: 0 8px 24px -8px rgba(31, 191, 173, 0.18);
+    --shadow-elevated: 0 16px 40px -12px rgba(31, 191, 173, 0.28);
+    --radius-card: 20px;
+    --radius-button: 14px;
+  }
+
+  .dark {
+    --bg-base: #0F1E1C;
+    --bg-card: #1A2D2B;
+    --text-primary: #E8F5F3;
+    --text-secondary: #8AAEAA;
+    --border-soft: #1E3533;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Inter', 'Manrope', system-ui, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@layer utilities {
+  .price {
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, var(--border-soft) 25%, var(--bg-base) 50%, var(--border-soft) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .safe-bottom {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
