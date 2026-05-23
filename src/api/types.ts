@@ -7,6 +7,11 @@ export type Category = {
   sortOrder: number;
 };
 
+export type ProductVariant = {
+  id: string;
+  color: string;
+};
+
 export type Product = {
   id: string;
   categoryId: string;
@@ -20,6 +25,7 @@ export type Product = {
   inStock: boolean;
   stockByShop?: Record<string, number>;
   description?: string;
+  variants?: ProductVariant[];
 };
 
 export type Shop = {

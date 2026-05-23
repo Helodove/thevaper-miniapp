@@ -1,0 +1,42 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B9F36C"/>
+      <stop offset="50%" stop-color="#3FD4C2"/>
+      <stop offset="100%" stop-color="#1FBFAD"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+
+  <!-- Tin body side (short, wide cylinder — snus tin is flat) -->
+  <!-- Body bottom face -->
+  <ellipse cx="200" cy="282" rx="90" ry="26" fill="white" opacity="0.75"/>
+  <!-- Body left/right sides -->
+  <rect x="110" y="230" width="180" height="52" fill="white" opacity="0.80"/>
+
+  <!-- Lid top face (main visible element — wide flat top) -->
+  <ellipse cx="200" cy="230" rx="90" ry="26" fill="white" opacity="0.96"/>
+
+  <!-- Lid inner groove (concentric ellipses for realism) -->
+  <ellipse cx="200" cy="230" rx="78" ry="22"
+           fill="none" stroke="#3FD4C2" stroke-width="4" opacity="0.30"/>
+  <ellipse cx="200" cy="230" rx="56" ry="16"
+           fill="none" stroke="#3FD4C2" stroke-width="3" opacity="0.22"/>
+
+  <!-- Lid grip lines (horizontal) -->
+  <line x1="152" y1="225" x2="248" y2="225"
+        stroke="#3FD4C2" stroke-width="4" stroke-linecap="round" opacity="0.28"/>
+  <line x1="162" y1="232" x2="238" y2="232"
+        stroke="#3FD4C2" stroke-width="3" stroke-linecap="round" opacity="0.22"/>
+  <line x1="170" y1="239" x2="230" y2="239"
+        stroke="#3FD4C2" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+
+  <!-- Opening notch on rim (right side) -->
+  <path d="M278 218 Q290 230 278 242"
+        stroke="white" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.55"/>
+
+  <!-- Logo -->
+  <g transform="translate(352,356)" opacity="0.5">
+    <text x="0" y="0" font-family="Arial" font-weight="800" font-size="20" fill="white">V</text>
+  </g>
+</svg>

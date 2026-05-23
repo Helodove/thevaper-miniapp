@@ -7,7 +7,19 @@ import { haptic } from '@/lib/telegram';
 import type { Product } from '@/api/types';
 import { useNavigate } from 'react-router-dom';
 
-export function ProductCard({ product }: { product: Product }) {
+// Убираем технические префиксы из названия — они очевидны из категории
+const STRIP_PREFIXES = [
+  'Ароматизатор ', 'Испаритель ', 'Картридж ', 'Жидкость ',
+  'Испаритель(и) ', 'Картридж(и) ',
+];
+function cardName(name: string): string {
+  for (const p of STRIP_PREFIXES) {
+    if (name.startsWith(p)) return name.slice(p.length);
+  }
+  return name;
+}
+
+export function ProductCard({ product, displayName }: { product: Product; displayName?: string }) {
   const navigate = useNavigate();
   const { items, add, increment, decrement } = useCartStore();
   const { selectedShop } = useShopStore();
@@ -44,6 +56,12 @@ export function ProductCard({ product }: { product: Product }) {
             className="w-full h-full object-cover transition-opacity"
             style={{ opacity: likelySoldOut ? 0.4 : 1 }}
             loading="lazy"
+            onError={(e) => {
+              const t = e.currentTarget;
+              t.onerror = null;
+              t.src = '/logo-thevaper-original.png';
+              t.className = 'w-12 h-12 rounded-lg opacity-30 m-auto';
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center" style={{ opacity: likelySoldOut ? 0.4 : 1 }}>
@@ -55,7 +73,7 @@ export function ProductCard({ product }: { product: Product }) {
       {/* Инфо */}
       <div className="p-3">
         <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>
-          {product.name}
+          {cardName(displayName ?? product.name)}
         </p>
         {product.flavor && (
           <p className="text-[12px] mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>

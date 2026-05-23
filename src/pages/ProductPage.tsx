@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ShoppingBag, MessageCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getProduct, getStock } from '@/api/catalog';
 import { getShops } from '@/api/shops';
 import { formatPrice } from '@/lib/format';
@@ -11,7 +12,7 @@ import { useShopStore } from '@/store/shop';
 import { QuantityStepper } from '@/components/QuantityStepper';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { queryClient, STALE } from '@/lib/queryClient';
-import type { Shop, Product, ProductsResponse } from '@/api/types';
+import type { Shop, Product, ProductVariant, ProductsResponse } from '@/api/types';
 
 const BOT_USERNAME = 'TVcatalogbot';
 
@@ -72,17 +73,15 @@ function StockShopRow({
 
 // ─── StockBlock ───────────────────────────────────────────────────────────────
 function StockBlock({
-  productId,
+  stockId,
   selectedShopId,
-  stockByShop,
 }: {
-  productId: string;
+  stockId: string;
   selectedShopId?: string;
-  stockByShop?: Record<string, number>;
 }) {
-  const { data: stockItems, isLoading: stockLoading } = useQuery({
-    queryKey: ['stock', productId],
-    queryFn: () => getStock(productId),
+  const { data: stockItems, isLoading: stockLoading, isError: stockError } = useQuery({
+    queryKey: ['stock', stockId],
+    queryFn: () => getStock(stockId),
     staleTime: STALE.stock,
   });
   const { data: shops, isLoading: shopsLoading } = useQuery({
@@ -99,21 +98,8 @@ function StockBlock({
     );
   }
 
-  const allShops = shops ?? [];
-  const stockReceived = Array.isArray(stockItems);
-
-  // Если /stock вернул пустой массив — используем stockByShop из самого товара как fallback
-  const stockMap: Map<string, number> =
-    stockReceived && stockItems!.length > 0
-      ? new Map(stockItems!.map((s) => [s.shopId, s.quantity]))
-      : stockByShop
-        ? new Map(Object.entries(stockByShop))
-        : new Map();
-
-  const hasAnyStock = stockMap.size > 0 && [...stockMap.values()].some((q) => q > 0);
-
-  // API вернул пустой массив и нет stockByShop — данные о наличии недоступны
-  if (stockReceived && stockMap.size === 0) {
+  // Ошибка API — данные недоступны
+  if (stockError) {
     return (
       <div
         className="rounded-2xl p-4 text-center space-y-3"
@@ -134,21 +120,11 @@ function StockBlock({
     );
   }
 
-  // Группируем по городам, выбранный магазин — первым в своём городе
-  const byCity = allShops.reduce<Record<string, { shop: Shop; quantity: number }[]>>((acc, shop) => {
-    const qty = stockMap.get(shop.id) ?? 0;
-    (acc[shop.city] ??= []).push({ shop, quantity: qty });
-    return acc;
-  }, {});
+  const allShops = shops ?? [];
+  const stockMap = new Map((stockItems ?? []).map((s) => [s.shopId, s.quantity]));
+  const hasAnyStock = [...stockMap.values()].some((q) => q > 0);
 
-  Object.values(byCity).forEach((arr) =>
-    arr.sort((a, b) => {
-      if (a.shop.id === selectedShopId) return -1;
-      if (b.shop.id === selectedShopId) return 1;
-      return (b.quantity > 0 ? 1 : 0) - (a.quantity > 0 ? 1 : 0);
-    })
-  );
-
+  // API вернул данные, но везде 0 — товар закончился
   if (!hasAnyStock) {
     return (
       <div
@@ -169,6 +145,20 @@ function StockBlock({
       </div>
     );
   }
+
+  const byCity = allShops.reduce<Record<string, { shop: Shop; quantity: number }[]>>((acc, shop) => {
+    const qty = stockMap.get(shop.id) ?? 0;
+    (acc[shop.city] ??= []).push({ shop, quantity: qty });
+    return acc;
+  }, {});
+
+  Object.values(byCity).forEach((arr) =>
+    arr.sort((a, b) => {
+      if (a.shop.id === selectedShopId) return -1;
+      if (b.shop.id === selectedShopId) return 1;
+      return (b.quantity > 0 ? 1 : 0) - (a.quantity > 0 ? 1 : 0);
+    })
+  );
 
   return (
     <div className="space-y-4">
@@ -196,20 +186,96 @@ function StockBlock({
   );
 }
 
+// ─── VariantChip — один цвет с предзагрузкой остатков ────────────────────────
+function VariantChip({
+  variant,
+  isSelected,
+  selectedShopId,
+  onSelect,
+}: {
+  variant: ProductVariant;
+  isSelected: boolean;
+  selectedShopId?: string;
+  onSelect: (id: string) => void;
+}) {
+  const { data: stockItems } = useQuery({
+    queryKey: ['stock', variant.id],
+    queryFn: () => getStock(variant.id),
+    staleTime: STALE.stock,
+  });
+
+  // Проверяем наличие: если магазин выбран — смотрим конкретно в нём
+  const inStock = stockItems
+    ? selectedShopId
+      ? stockItems.some((s) => s.shopId === selectedShopId && s.quantity > 0)
+      : stockItems.some((s) => s.quantity > 0)
+    : null; // null = ещё загружается
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.94 }}
+      onClick={() => { haptic('light'); onSelect(variant.id); }}
+      className="px-4 py-2 rounded-2xl text-[13px] font-semibold transition-all relative"
+      style={
+        isSelected
+          ? { background: 'var(--brand-primary)', color: 'white', boxShadow: '0 2px 12px rgba(31,191,173,0.35)' }
+          : inStock === true
+          ? { background: 'var(--bg-card)', color: 'var(--text-primary)', boxShadow: 'var(--shadow-card)', border: '2px solid var(--brand-primary)' }
+          : inStock === false
+          ? { background: 'var(--bg-card)', color: 'var(--text-secondary)', boxShadow: 'var(--shadow-card)', border: '1.5px solid var(--border-soft)', opacity: 0.45 }
+          : { background: 'var(--bg-card)', color: 'var(--text-primary)', boxShadow: 'var(--shadow-card)', border: '1.5px solid var(--border-soft)' }
+      }
+    >
+      {variant.color}
+    </motion.button>
+  );
+}
+
+// ─── VariantPicker ────────────────────────────────────────────────────────────
+function VariantPicker({
+  variants,
+  selected,
+  selectedShopId,
+  onSelect,
+}: {
+  variants: ProductVariant[];
+  selected: string | null;
+  selectedShopId?: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="mt-5">
+      <p className="text-[13px] font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>
+        Выберите цвет
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {variants.map((v) => (
+          <VariantChip
+            key={v.id}
+            variant={v}
+            isSelected={v.id === selected}
+            selectedShopId={selectedShopId}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── ProductPage ──────────────────────────────────────────────────────────────
 export function ProductPage() {
   const { productId } = useParams<{ storeId: string; productId: string }>();
   const { items, add, increment, decrement } = useCartStore();
   const { selectedShop } = useShopStore();
-  const cartItem = items.find((i) => i.productId === productId);
-  const qty = cartItem?.quantity ?? 0;
+
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => getProduct(productId!),
     staleTime: STALE.products,
     enabled: !!productId,
-    // Берём продукт из кэша списков категорий/поиска — не нужен отдельный API-запрос
     initialData: (): Product | undefined => {
       const listCaches = queryClient.getQueriesData<ProductsResponse>({ queryKey: ['products'] });
       for (const [, data] of listCaches) {
@@ -218,12 +284,23 @@ export function ProductPage() {
       }
       return undefined;
     },
+    // initialData из кеша не имеет вариантов — помечаем как устаревшую чтобы сразу дозагрузить
+    initialDataUpdatedAt: 0,
   });
+
+  const hasVariants = (product?.variants?.length ?? 0) > 0;
+
+  // Для варианта в корзине: если выбран цвет — добавляем вариант, иначе — родительский товар
+  const cartId = selectedVariantId ?? productId!;
+  const cartItem = items.find((i) => i.productId === cartId);
+  const qty = cartItem?.quantity ?? 0;
 
   function handleAdd() {
     if (!product) return;
     haptic('medium');
-    add({ productId: product.id, name: product.name, price: product.price, image: product.images[0] });
+    const variant = product.variants?.find((v) => v.id === selectedVariantId);
+    const name = variant ? `${product.name} (${variant.color})` : product.name;
+    add({ productId: cartId, name, price: product.price, image: product.images[0] });
   }
 
   if (isLoading) {
@@ -252,12 +329,25 @@ export function ProductPage() {
     );
   }
 
+  // stockId: если выбран вариант — запрашиваем по нему, иначе — по родительскому товару
+  const stockId = selectedVariantId ?? productId!;
+
   return (
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh', paddingBottom: 100 }}>
       {/* Фото */}
       <div className="w-full aspect-square relative overflow-hidden" style={{ background: 'var(--brand-gradient)' }}>
         {product.images[0] ? (
-          <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain p-6" />
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            className="w-full h-full object-contain p-6"
+            onError={(e) => {
+              const t = e.currentTarget;
+              t.onerror = null;
+              t.src = '/logo-thevaper-original.png';
+              t.className = 'w-24 h-24 rounded-2xl opacity-60 m-auto';
+            }}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <img src="/logo-thevaper-original.png" alt="" className="w-24 h-24 rounded-2xl opacity-60" />
@@ -276,7 +366,7 @@ export function ProductPage() {
           {product.name}
         </h1>
 
-        {product.flavor && (
+        {product.flavor && !hasVariants && (
           <span
             className="inline-block mt-2 px-3 py-1 rounded-full text-[13px] font-semibold"
             style={{ background: 'var(--border-soft)', color: 'var(--brand-primary)' }}
@@ -297,16 +387,47 @@ export function ProductPage() {
           </p>
         )}
 
+        {/* Выбор цвета */}
+        {hasVariants && (
+          <VariantPicker
+            variants={product.variants!}
+            selected={selectedVariantId}
+            selectedShopId={selectedShop?.id}
+            onSelect={setSelectedVariantId}
+          />
+        )}
+
         {/* Блок наличия */}
         <div className="mt-8">
           <h2 className="text-[18px] font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
             В наличии в магазинах
           </h2>
-          <StockBlock
-            productId={product.id}
-            selectedShopId={selectedShop?.id}
-            stockByShop={product.stockByShop}
-          />
+
+          {hasVariants && !selectedVariantId ? (
+            <div
+              className="rounded-2xl p-5 text-center"
+              style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-card)' }}
+            >
+              <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
+                Выберите цвет выше, чтобы увидеть наличие по магазинам
+              </p>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={stockId}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <StockBlock
+                  stockId={stockId}
+                  selectedShopId={selectedShop?.id}
+                />
+              </motion.div>
+            </AnimatePresence>
+          )}
         </div>
 
         <p className="mt-6 text-[11px] text-center" style={{ color: 'var(--text-secondary)' }}>
@@ -334,7 +455,14 @@ export function ProductPage() {
           </p>
         </div>
 
-        {qty === 0 ? (
+        {hasVariants && !selectedVariantId ? (
+          <div
+            className="px-6 h-[56px] rounded-2xl flex items-center font-bold text-[14px]"
+            style={{ background: 'var(--border-soft)', color: 'var(--text-secondary)' }}
+          >
+            Выберите цвет
+          </div>
+        ) : qty === 0 ? (
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={handleAdd}
@@ -347,8 +475,8 @@ export function ProductPage() {
         ) : (
           <QuantityStepper
             quantity={qty}
-            onIncrement={() => { haptic('light'); increment(product.id); }}
-            onDecrement={() => { haptic('light'); decrement(product.id); }}
+            onIncrement={() => { haptic('light'); increment(cartId); }}
+            onDecrement={() => { haptic('light'); decrement(cartId); }}
           />
         )}
       </div>

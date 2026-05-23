@@ -42,8 +42,10 @@ export function SearchPage() {
     }
   }, [query]);
 
+  const [inStock, setInStock] = useState(true);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['search', query],
+    queryKey: ['search', query, inStock],
     queryFn: () => getProducts({ search: query }),
     staleTime: STALE.products,
     enabled: query.length >= 2,
@@ -53,7 +55,10 @@ export function SearchPage() {
     if (query.length >= 2 && data) saveHistory(query);
   }, [data]);
 
-  const sorted = useMemo(() => sortByStock(data?.items ?? []), [data]);
+  const sorted = useMemo(() => {
+    const items = data?.items ?? [];
+    return sortByStock(inStock ? items.filter((p) => p.inStock) : items);
+  }, [data, inStock]);
 
   return (
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh' }}>
@@ -84,6 +89,21 @@ export function SearchPage() {
         )}
       </div>
 
+      {/* Фильтр */}
+      {query.length >= 2 && (
+        <div className="px-4 pb-2">
+          <button
+            onClick={() => { haptic('light'); setInStock((v) => !v); }}
+            className="px-4 py-2 rounded-full text-[13px] font-semibold"
+            style={inStock
+              ? { background: 'var(--brand-primary)', color: 'white' }
+              : { background: 'var(--border-soft)', color: 'var(--text-secondary)' }}
+          >
+            В наличии
+          </button>
+        </div>
+      )}
+
       {/* Результаты */}
       <div className="px-4 pb-8">
         {query.length >= 2 && (
@@ -111,7 +131,7 @@ export function SearchPage() {
             {!isLoading && sorted.length > 0 && (
               <>
                 <p className="text-[13px] font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                  Найдено: {sorted.length}
+                  Найдено: {sorted.length}{inStock ? ' в наличии' : ''}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {sorted.map((product, i) => (

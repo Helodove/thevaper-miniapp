@@ -1,9 +1,11 @@
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { getShops } from '@/api/shops';
 import { useShopStore } from '@/store/shop';
 import { ShopCard } from '@/components/ShopCard';
+import { SearchInput } from '@/components/SearchInput';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { haptic } from '@/lib/telegram';
@@ -13,6 +15,14 @@ import type { Shop } from '@/api/types';
 export function StoreSelectPage() {
   const navigate = useNavigate();
   const { setShop } = useShopStore();
+  const [searchVal, setSearchVal] = useState('');
+
+  const handleSearch = useCallback((v: string) => {
+    setSearchVal(v);
+    if (v.length >= 2) {
+      navigate(`/search?q=${encodeURIComponent(v)}`);
+    }
+  }, [navigate]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['shops'],
@@ -47,6 +57,9 @@ export function StoreSelectPage() {
         <p className="text-[13px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
           Мы покажем товары и наличие для выбранной точки
         </p>
+        <div className="mt-4">
+          <SearchInput value={searchVal} onChange={handleSearch} placeholder="Найти товар, вкус или бренд" />
+        </div>
       </div>
 
       <div className="px-4 pb-8 space-y-6">
