@@ -10,6 +10,7 @@ import { CategoryPage } from '@/pages/CategoryPage';
 import { ProductPage } from '@/pages/ProductPage';
 import { CartPage } from '@/pages/CartPage';
 import { SearchPage } from '@/pages/SearchPage';
+import { AdminPage } from '@/pages/AdminPage';
 
 function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   const app = tg();
@@ -80,9 +81,11 @@ export default function App() {
     setAgeConfirmed(true);
   }
 
+  const isAdmin = location.pathname === '/admin';
+
   return (
     <QueryClientProvider client={queryClient}>
-      {!ageConfirmed && <AgeGate onConfirm={confirmAge} />}
+      {!ageConfirmed && !isAdmin && <AgeGate onConfirm={confirmAge} />}
       <BackButtonSync />
       <AnimatePresence mode="wait">
         <motion.div
@@ -99,6 +102,7 @@ export default function App() {
             <Route path="/store/:storeId/product/:productId" element={<ProductPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </motion.div>
       </AnimatePresence>
