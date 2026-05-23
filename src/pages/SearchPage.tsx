@@ -89,8 +89,8 @@ export function SearchPage() {
         )}
       </div>
 
-      {/* Фильтр */}
-      {query.length >= 2 && (
+      {/* Фильтр — только когда выбран магазин */}
+      {query.length >= 2 && selectedShop && (
         <div className="px-4 pb-2">
           <button
             onClick={() => { haptic('light'); setInStock((v) => !v); }}
