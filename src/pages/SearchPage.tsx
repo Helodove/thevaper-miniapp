@@ -45,8 +45,8 @@ export function SearchPage() {
   const [inStock, setInStock] = useState(true);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['search', query, selectedShop?.id],
-    queryFn: () => getProducts({ search: query, storeId: selectedShop?.id }),
+    queryKey: ['search', query],
+    queryFn: () => getProducts({ search: query }),
     staleTime: STALE.products,
     enabled: query.length >= 2,
   });
