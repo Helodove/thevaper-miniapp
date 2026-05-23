@@ -33,20 +33,20 @@ export function SearchPage() {
   const [focused, setFocused] = useState(false);
   const history = getHistory();
 
-  // Sync query → URL
+  // Sync query → URL (не уходим со страницы при очистке)
   useEffect(() => {
     if (query.length >= 2) {
       navigate(`/search?q=${encodeURIComponent(query)}`, { replace: true });
-    } else if (query === '') {
-      navigate(selectedShop ? `/store/${selectedShop.id}` : '/', { replace: true });
+    } else {
+      navigate('/search', { replace: true });
     }
   }, [query]);
 
   const [inStock, setInStock] = useState(true);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['search', query, inStock],
-    queryFn: () => getProducts({ search: query }),
+    queryKey: ['search', query, selectedShop?.id],
+    queryFn: () => getProducts({ search: query, storeId: selectedShop?.id }),
     staleTime: STALE.products,
     enabled: query.length >= 2,
   });
