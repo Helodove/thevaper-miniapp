@@ -5,11 +5,8 @@ import type { Shop } from '@/api/types';
 
 function ShopPlaceholder() {
   return (
-    <div
-      className="w-full flex items-center justify-center"
-      style={{ aspectRatio: '1.4', background: 'linear-gradient(135deg, #1FBFAD 0%, #169E8E 100%)' }}
-    >
-      <img src="/logo-thevaper-original.png" alt="TheVaper" className="w-12 h-12 rounded-xl opacity-90" />
+    <div className="w-full overflow-hidden" style={{ aspectRatio: '1.4', background: '#EEF9F8' }}>
+      <img src="/shop-building.svg" alt="" className="w-full h-full object-cover" />
     </div>
   );
 }

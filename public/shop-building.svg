@@ -1,0 +1,60 @@
+<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sky -->
+  <rect width="280" height="180" fill="#EEF9F8"/>
+
+  <!-- Ground -->
+  <rect y="148" width="280" height="32" fill="#D8F2EE"/>
+  <rect y="148" width="280" height="2" fill="#B2E0D8"/>
+
+  <!-- Building shadow -->
+  <rect x="46" y="64" width="196" height="88" rx="3" fill="#D0ECE9" opacity="0.5"/>
+
+  <!-- Main building -->
+  <rect x="42" y="60" width="196" height="88" rx="3" fill="white"/>
+
+  <!-- Facade top band -->
+  <rect x="42" y="60" width="196" height="22" rx="3" fill="#1FBFAD"/>
+  <rect x="42" y="72" width="196" height="10" fill="#1FBFAD"/>
+
+  <!-- Sign text -->
+  <text x="140" y="76" text-anchor="middle" fill="white" font-size="10" font-family="Arial, sans-serif" font-weight="700" letter-spacing="1">TheVaper</text>
+
+  <!-- Left window -->
+  <rect x="58" y="96" width="40" height="30" rx="3" fill="#EEF9F8" stroke="#1FBFAD" stroke-width="1.5"/>
+  <line x1="78" y1="96" x2="78" y2="126" stroke="#1FBFAD" stroke-width="1"/>
+  <line x1="58" y1="111" x2="98" y2="111" stroke="#1FBFAD" stroke-width="1"/>
+
+  <!-- Right window -->
+  <rect x="182" y="96" width="40" height="30" rx="3" fill="#EEF9F8" stroke="#1FBFAD" stroke-width="1.5"/>
+  <line x1="202" y1="96" x2="202" y2="126" stroke="#1FBFAD" stroke-width="1"/>
+  <line x1="182" y1="111" x2="222" y2="111" stroke="#1FBFAD" stroke-width="1"/>
+
+  <!-- Door -->
+  <rect x="118" y="103" width="44" height="45" rx="2" fill="#F0FDFB" stroke="#B2E0D8" stroke-width="1.5"/>
+  <rect x="122" y="107" width="16" height="36" rx="1" fill="#CCF0EB" stroke="#1FBFAD" stroke-width="1"/>
+  <rect x="142" y="107" width="16" height="36" rx="1" fill="#CCF0EB" stroke="#1FBFAD" stroke-width="1"/>
+  <circle cx="137" cy="125" r="2" fill="#1FBFAD"/>
+  <circle cx="143" cy="125" r="2" fill="#1FBFAD"/>
+
+  <!-- Awning -->
+  <path d="M110 82 L170 82 L175 90 L105 90 Z" fill="#169E8E"/>
+
+  <!-- Left plant -->
+  <rect x="22" y="140" width="14" height="10" fill="#B2E0D8" rx="2"/>
+  <ellipse cx="29" cy="140" rx="9" ry="11" fill="#4CAF50"/>
+  <ellipse cx="24" cy="137" rx="5" ry="7" fill="#66BB6A"/>
+
+  <!-- Right plant -->
+  <rect x="244" y="140" width="14" height="10" fill="#B2E0D8" rx="2"/>
+  <ellipse cx="251" cy="140" rx="9" ry="11" fill="#4CAF50"/>
+  <ellipse cx="256" cy="137" rx="5" ry="7" fill="#66BB6A"/>
+
+  <!-- Sun -->
+  <circle cx="246" cy="28" r="16" fill="#FFF3E0" opacity="0.8"/>
+  <circle cx="246" cy="28" r="11" fill="#FFE082"/>
+
+  <!-- Clouds -->
+  <ellipse cx="54" cy="22" rx="22" ry="10" fill="white" opacity="0.9"/>
+  <ellipse cx="68" cy="18" rx="14" ry="9" fill="white" opacity="0.9"/>
+  <ellipse cx="40" cy="20" rx="12" ry="8" fill="white" opacity="0.9"/>
+</svg>
