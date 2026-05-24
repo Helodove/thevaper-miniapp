@@ -29,26 +29,37 @@ export function SearchPage() {
   const [params] = useSearchParams();
   const initial = params.get('q') ?? '';
   const [query, setQuery] = useState(initial);
+  const [debouncedQuery, setDebouncedQuery] = useState(initial);
   const { selectedShop } = useShopStore();
   const [focused, setFocused] = useState(false);
   const history = getHistory();
 
-  // Sync query → URL (не уходим со страницы при очистке)
+  // Debounce: ждём 450ms после последнего нажатия перед запросом
   useEffect(() => {
-    if (query.length >= 2) {
-      navigate(`/search?q=${encodeURIComponent(query)}`, { replace: true });
+    const t = setTimeout(() => setDebouncedQuery(query), 450);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  // Sync debouncedQuery → URL
+  useEffect(() => {
+    if (debouncedQuery.length >= 2) {
+      navigate(`/search?q=${encodeURIComponent(debouncedQuery)}`, { replace: true });
     } else {
       navigate('/search', { replace: true });
     }
-  }, [query]);
+  }, [debouncedQuery]);
 
   const [inStock, setInStock] = useState(true);
 
+  // Сбрасываем фильтр когда магазин снят
+  useEffect(() => {
+    if (!selectedShop) setInStock(true);
+  }, [selectedShop]);
   const { data, isLoading } = useQuery({
-    queryKey: ['search', query, selectedShop?.id],
-    queryFn: () => getProducts({ search: query, storeId: selectedShop?.id }),
+    queryKey: ['search', debouncedQuery, selectedShop?.id],
+    queryFn: () => getProducts({ search: debouncedQuery, storeId: selectedShop?.id }),
     staleTime: STALE.products,
-    enabled: query.length >= 2,
+    enabled: debouncedQuery.length >= 2,
   });
 
   useEffect(() => {
@@ -90,7 +101,7 @@ export function SearchPage() {
       </div>
 
       {/* Фильтр — только когда выбран магазин */}
-      {query.length >= 2 && selectedShop && (
+      {debouncedQuery.length >= 2 && selectedShop && (
         <div className="px-4 pb-2">
           <button
             onClick={() => { haptic('light'); setInStock((v) => !v); }}
@@ -106,7 +117,7 @@ export function SearchPage() {
 
       {/* Результаты */}
       <div className="px-4 pb-8">
-        {query.length >= 2 && (
+        {debouncedQuery.length >= 2 && (
           <>
             {isLoading && (
               <div className="grid grid-cols-2 gap-3">
@@ -119,7 +130,7 @@ export function SearchPage() {
                 <SearchX size={64} strokeWidth={1.5} style={{ color: 'var(--brand-primary)', opacity: 0.5 }} />
                 <div>
                   <p className="text-[17px] font-bold" style={{ color: 'var(--text-primary)' }}>
-                    Ничего не нашлось по запросу «{query}»
+                    Ничего не нашлось по запросу «{debouncedQuery}»
                   </p>
                   <p className="text-[14px] mt-1" style={{ color: 'var(--text-secondary)' }}>
                     Попробуйте другой вкус или бренд
@@ -150,7 +161,7 @@ export function SearchPage() {
           </>
         )}
 
-        {query.length < 2 && query.length > 0 && (
+        {debouncedQuery.length < 2 && query.length > 0 && (
           <p className="text-center py-8 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
             Введите минимум 2 символа
           </p>
