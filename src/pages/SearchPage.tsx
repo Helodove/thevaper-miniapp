@@ -142,7 +142,7 @@ export function SearchPage() {
             {!isLoading && sorted.length > 0 && (
               <>
                 <p className="text-[13px] font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                  Найдено: {sorted.length}{inStock ? ' в наличии' : ''}
+                  Найдено: {sorted.length}{inStock && selectedShop ? ' в наличии' : ''}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {sorted.map((product, i) => (
