@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Trash2, MapPin } from 'lucide-react';
+import { useQuery, useQueries } from '@tanstack/react-query';
+import { Trash2, MapPin, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getShops } from '@/api/shops';
+import { getStock } from '@/api/catalog';
 import { useCartStore } from '@/store/cart';
 import { useShopStore } from '@/store/shop';
 import { formatPrice } from '@/lib/format';
@@ -22,6 +23,28 @@ export function CartPage() {
   const [shopOpen, setShopOpen] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+
+  // Проверяем наличие каждого товара в выбранном магазине
+  const stockQueries = useQueries({
+    queries: items.map((item) => ({
+      queryKey: ['stock', item.productId],
+      queryFn: () => getStock(item.productId),
+      staleTime: STALE.stock,
+      enabled: !!selectedShop,
+    })),
+  });
+
+  // productId → true/false/null (null = загружается или магазин не выбран)
+  const stockStatus = new Map<string, boolean | null>();
+  items.forEach((item, i) => {
+    if (!selectedShop) { stockStatus.set(item.productId, null); return; }
+    const q = stockQueries[i];
+    if (q.isLoading || !q.data) { stockStatus.set(item.productId, null); return; }
+    const shopStock = q.data.find((s) => s.shopId === selectedShop.id);
+    stockStatus.set(item.productId, (shopStock?.quantity ?? 0) > 0);
+  });
+
+  const unavailableCount = [...stockStatus.values()].filter((v) => v === false).length;
 
   const shopsQuery = useQuery({ queryKey: ['shops'], queryFn: getShops, staleTime: STALE.shops });
   const byCity = (shopsQuery.data ?? []).reduce<Record<string, Shop[]>>((acc, s) => {
@@ -71,43 +94,76 @@ export function CartPage() {
 
         {/* Товары */}
         <AnimatePresence>
-          {items.map((item) => (
-            <motion.div
-              key={item.productId}
-              layout
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16, height: 0 }}
-              className="flex items-center gap-3 p-3 rounded-2xl"
-              style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-card)' }}
-            >
-              {item.image && (
-                <img src={item.image} alt={item.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-                  {item.name}
-                </p>
-                <p className="text-[16px] font-extrabold price mt-0.5" style={{ color: 'var(--brand-primary)' }}>
-                  {formatPrice(item.price * item.quantity)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <QuantityStepper
-                  quantity={item.quantity}
-                  onIncrement={() => increment(item.productId)}
-                  onDecrement={() => decrement(item.productId)}
-                />
-                <button
-                  onClick={() => { haptic('light'); remove(item.productId); }}
-                  className="w-8 h-8 flex items-center justify-center rounded-xl"
-                  style={{ background: 'var(--border-soft)' }}
-                >
-                  <Trash2 size={14} strokeWidth={2} style={{ color: 'var(--text-secondary)' }} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+          {items.map((item) => {
+            const avail = stockStatus.get(item.productId);
+            const unavailable = avail === false;
+            return (
+              <motion.div
+                key={item.productId}
+                layout
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 16, height: 0 }}
+                className="flex items-center gap-3 p-3 rounded-2xl"
+                style={{
+                  background: 'var(--bg-card)',
+                  boxShadow: unavailable
+                    ? '0 2px 16px rgba(0,0,0,0.4), inset 0 0 0 1.5px rgba(239,68,68,0.5)'
+                    : 'var(--shadow-card)',
+                }}
+              >
+                {item.image && (
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-14 h-14 rounded-xl object-cover"
+                      style={{ opacity: unavailable ? 0.4 : 1 }}
+                    />
+                    {unavailable && (
+                      <div
+                        className="absolute inset-0 rounded-xl flex items-center justify-center"
+                        style={{ background: 'rgba(239,68,68,0.15)' }}
+                      >
+                        <AlertTriangle size={16} style={{ color: '#ef4444' }} />
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-[14px] font-semibold truncate"
+                    style={{ color: unavailable ? 'var(--text-secondary)' : 'var(--text-primary)' }}
+                  >
+                    {item.name}
+                  </p>
+                  {unavailable ? (
+                    <p className="text-[12px] font-semibold mt-0.5" style={{ color: '#ef4444' }}>
+                      Нет в этом магазине
+                    </p>
+                  ) : (
+                    <p className="text-[16px] font-extrabold price mt-0.5" style={{ color: 'var(--brand-primary)' }}>
+                      {formatPrice(item.price * item.quantity)}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <QuantityStepper
+                    quantity={item.quantity}
+                    onIncrement={() => increment(item.productId)}
+                    onDecrement={() => decrement(item.productId)}
+                  />
+                  <button
+                    onClick={() => { haptic('light'); remove(item.productId); }}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl"
+                    style={{ background: 'var(--border-soft)' }}
+                  >
+                    <Trash2 size={14} strokeWidth={2} style={{ color: 'var(--text-secondary)' }} />
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
 
         {/* Где забрать */}
@@ -172,6 +228,25 @@ export function CartPage() {
             <span className="price" style={{ color: 'var(--brand-primary)' }}>{formatPrice(total())}</span>
           </div>
         </div>
+
+        {unavailableCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-2 px-4 py-3 rounded-2xl"
+            style={{
+              background: 'rgba(239,68,68,0.08)',
+              border: '1px solid rgba(239,68,68,0.25)',
+            }}
+          >
+            <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
+            <p className="text-[13px]" style={{ color: '#f87171' }}>
+              {unavailableCount === 1
+                ? '1 товар отсутствует в выбранном магазине. Смените магазин или уберите его из корзины.'
+                : `${unavailableCount} товара отсутствуют в выбранном магазине. Смените магазин или уберите их из корзины.`}
+            </p>
+          </motion.div>
+        )}
 
         <p className="text-[11px] text-center" style={{ color: 'var(--text-secondary)' }}>
           18+. Продажа лицам младше 18 лет запрещена.
