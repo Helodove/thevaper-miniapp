@@ -10,6 +10,9 @@ const SHOP_IMAGES: Array<[string, string]> = [
   ['космонавтов',         '/shops/kosmonavt.png'],
   ['зои космодемьянской', '/shops/zoi.png'],
   ['газина',              '/shops/gazina.png'],
+  ['хренникова',          '/shops/xrenikova.png'],
+  ['виктора музыки',      '/shops/viktora.png'],
+  ['куколкина',           '/shops/kukolkina.png'],
 ];
 
 function getShopImage(address: string): string {
