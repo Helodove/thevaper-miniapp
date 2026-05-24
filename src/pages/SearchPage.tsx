@@ -49,11 +49,11 @@ export function SearchPage() {
     }
   }, [debouncedQuery]);
 
-  const [inStock, setInStock] = useState(true);
+  const [inStock, setInStock] = useState(false);
 
   // Сбрасываем фильтр когда магазин снят
   useEffect(() => {
-    if (!selectedShop) setInStock(true);
+    if (!selectedShop) setInStock(false);
   }, [selectedShop]);
   const { data, isLoading } = useQuery({
     queryKey: ['search', debouncedQuery, selectedShop?.id],
