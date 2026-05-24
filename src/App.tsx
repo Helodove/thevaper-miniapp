@@ -11,6 +11,7 @@ import { ProductPage } from '@/pages/ProductPage';
 import { CartPage } from '@/pages/CartPage';
 import { SearchPage } from '@/pages/SearchPage';
 import { AdminPage } from '@/pages/AdminPage';
+import { TopLoadingBar } from '@/components/TopLoadingBar';
 
 function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   const app = tg();
@@ -85,6 +86,7 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <TopLoadingBar />
       {!ageConfirmed && !isAdmin && <AgeGate onConfirm={confirmAge} />}
       <BackButtonSync />
       <AnimatePresence mode="wait">
