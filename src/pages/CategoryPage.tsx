@@ -13,32 +13,65 @@ import { useShopStore } from '@/store/shop';
 import { getCategoryTitle } from '@/lib/categoryCovers';
 import { haptic } from '@/lib/telegram';
 
-// ─── Карточка подкатегории/бренда ─────────────────────────────────────────────
-function SubcategoryCard({ title, onTap }: { title: string; onTap: () => void }) {
+const SUBCATEGORY_ANGLES = [135, 150, 120, 160, 125, 145, 115, 155];
+
+function SubcategoryCard({ title, index, onTap }: { title: string; index: number; onTap: () => void }) {
+  const angle = SUBCATEGORY_ANGLES[index % SUBCATEGORY_ANGLES.length];
+  const useLime = index % 3 === 2;
+  const gradient = useLime
+    ? `linear-gradient(${angle}deg, #1FBFAD 0%, #B9F36C 100%)`
+    : `linear-gradient(${angle}deg, #169E8E 0%, #1FBFAD 100%)`;
+  const letterColor = useLime ? '#0F2E2A' : '#ffffff';
+
   return (
     <motion.div
-      whileTap={{ scale: 0.97 }}
+      whileTap={{ scale: 0.96 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 22 }}
       onClick={onTap}
-      className="relative aspect-square overflow-hidden cursor-pointer flex flex-col justify-end"
-      style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', background: 'var(--bg-card)' }}
+      className="relative overflow-hidden cursor-pointer flex flex-col"
+      style={{
+        borderRadius: 'var(--radius-card)',
+        boxShadow: 'var(--shadow-elevated)',
+        background: 'var(--bg-card)',
+        aspectRatio: '1',
+      }}
     >
-      {/* Большая буква-фон */}
-      <span
-        className="absolute inset-0 flex items-center justify-center text-[88px] font-extrabold select-none pointer-events-none"
-        style={{ color: 'var(--brand-primary)', opacity: 0.07 }}
-      >
-        {title[0]?.toUpperCase()}
-      </span>
+      {/* Верхняя градиентная зона */}
       <div
-        className="absolute inset-0"
-        style={{ background: 'linear-gradient(to top, color-mix(in srgb, var(--brand-primary) 20%, transparent) 0%, transparent 60%)' }}
-      />
-      <p
-        className="relative z-10 text-[15px] font-extrabold leading-tight px-3 pb-3"
-        style={{ color: 'var(--text-primary)' }}
+        className="relative flex-shrink-0 overflow-hidden"
+        style={{ height: '58%', background: gradient }}
       >
-        {title}
-      </p>
+        {/* Крупная буква как текстура */}
+        <span
+          className="absolute inset-0 flex items-end justify-end pr-2 pb-1 text-[90px] font-black select-none leading-none"
+          style={{ color: letterColor, opacity: 0.18, letterSpacing: '-4px' }}
+        >
+          {title[0]?.toUpperCase()}
+        </span>
+        {/* Скруглённый выступ снизу */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-4"
+          style={{
+            background: 'var(--bg-card)',
+            borderRadius: '50% 50% 0 0 / 100% 100% 0 0',
+          }}
+        />
+      </div>
+
+      {/* Нижняя белая зона */}
+      <div className="flex flex-col justify-between flex-1 px-3 pt-1 pb-3">
+        <p
+          className="text-[14px] font-extrabold leading-tight"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {title}
+        </p>
+        {/* Маленький акцентный штрих */}
+        <div
+          className="h-[3px] w-8 rounded-full"
+          style={{ background: gradient }}
+        />
+      </div>
     </motion.div>
   );
 }
@@ -137,6 +170,7 @@ export function CategoryPage() {
                 >
                   <SubcategoryCard
                     title={sub.title}
+                    index={i}
                     onTap={() => {
                       haptic('light');
                       navigate(`/store/${storeId}/category/${sub.id}`, { state: { title: sub.title } });
