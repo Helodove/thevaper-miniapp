@@ -44,8 +44,9 @@ export type StockItem = {
 };
 
 export type OrderPayload = {
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; name: string; price: number; quantity: number }[];
   shopId: string;
+  shopName: string;
   customer: { name: string; phone: string };
   comment?: string;
 };

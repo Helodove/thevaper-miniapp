@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueries } from '@tanstack/react-query';
-import { Trash2, MapPin, AlertTriangle } from 'lucide-react';
+import { Trash2, MapPin, AlertTriangle, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getShops } from '@/api/shops';
 import { getStock } from '@/api/catalog';
+import { createOrder } from '@/api/orders';
 import { useCartStore } from '@/store/cart';
 import { useShopStore } from '@/store/shop';
 import { formatPrice } from '@/lib/format';
-import { haptic, showMainButton, hideMainButton, sendOrder } from '@/lib/telegram';
+import { haptic, showMainButton, hideMainButton } from '@/lib/telegram';
 import { BrandHeader } from '@/components/BrandHeader';
 import { QuantityStepper } from '@/components/QuantityStepper';
 import { BottomSheet } from '@/components/BottomSheet';
@@ -18,11 +19,13 @@ import type { Shop } from '@/api/types';
 
 export function CartPage() {
   const navigate = useNavigate();
-  const { items, increment, decrement, remove, total, count } = useCartStore();
+  const { items, increment, decrement, remove, clear, total, count } = useCartStore();
   const { selectedShop, setShop } = useShopStore();
   const [shopOpen, setShopOpen] = useState(false);
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('+7');
+  const [ordering, setOrdering] = useState(false);
+  const [orderDone, setOrderDone] = useState<{ orderId: string; total: number } | null>(null);
 
   // Проверяем наличие каждого товара в выбранном магазине
   const stockQueries = useQueries({
@@ -52,18 +55,34 @@ export function CartPage() {
     return acc;
   }, {});
 
-  const canOrder = items.length > 0 && !!selectedShop && name.trim().length >= 2 && phone.trim().length >= 10;
-  const mainBtnText = `Оформить заказ • ${formatPrice(total())}`;
+  const phoneDigits = phone.replace(/\D/g, '');
+  const canOrder = items.length > 0 && !!selectedShop && name.trim().length >= 2 && phoneDigits.length >= 11 && !ordering;
+  const mainBtnText = ordering ? 'Отправляем...' : `Оформить заказ • ${formatPrice(total())}`;
 
-  const handleOrder = useCallback(() => {
+  const handlePhoneChange = (val: string) => {
+    if (!val.startsWith('+7')) { setPhone('+7'); return; }
+    setPhone(val);
+  };
+
+  const handleOrder = useCallback(async () => {
     if (!canOrder) return;
+    setOrdering(true);
     haptic('success');
-    sendOrder({
-      items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
-      shopId: selectedShop!.id,
-      customer: { name, phone },
-    });
-  }, [canOrder, items, selectedShop, name, phone]);
+    try {
+      const result = await createOrder({
+        items: items.map((i) => ({ productId: i.productId, name: i.name, price: i.price, quantity: i.quantity })),
+        shopId: selectedShop!.id,
+        shopName: `${selectedShop!.city}, ${selectedShop!.address}`,
+        customer: { name, phone },
+      });
+      setOrderDone({ orderId: result.orderId, total: result.total });
+      clear();
+    } catch {
+      haptic('error');
+    } finally {
+      setOrdering(false);
+    }
+  }, [canOrder, items, selectedShop, name, phone, clear]);
 
   useEffect(() => {
     if (items.length > 0) {
@@ -73,6 +92,43 @@ export function CartPage() {
     }
     return () => hideMainButton(handleOrder);
   }, [items.length, mainBtnText, handleOrder, canOrder]);
+
+  // Экран успешного заказа
+  if (orderDone) {
+    return (
+      <div style={{ background: 'var(--bg-base)', minHeight: '100vh' }}>
+        <BrandHeader />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center justify-center px-6 py-20 text-center gap-5"
+        >
+          <div className="w-20 h-20 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(31,191,173,0.12)' }}>
+            <CheckCircle size={44} strokeWidth={1.5} style={{ color: 'var(--brand-primary)' }} />
+          </div>
+          <div>
+            <p className="text-[22px] font-extrabold" style={{ color: 'var(--text-primary)' }}>
+              Заказ принят!
+            </p>
+            <p className="text-[14px] mt-1" style={{ color: 'var(--text-secondary)' }}>
+              {orderDone.orderId} · {formatPrice(orderDone.total)}
+            </p>
+          </div>
+          <p className="text-[14px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Мы получили ваш заказ и скоро свяжемся с вами для подтверждения.
+          </p>
+          <button
+            onClick={() => { haptic('light'); navigate('/'); }}
+            className="mt-2 px-8 py-3 rounded-2xl text-[15px] font-bold"
+            style={{ background: 'var(--brand-primary)', color: 'white' }}
+          >
+            В каталог
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -207,7 +263,7 @@ export function CartPage() {
             type="tel"
             placeholder="+7 (___) ___-__-__"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => handlePhoneChange(e.target.value)}
             className="w-full px-4 py-3 rounded-xl text-[15px] outline-none"
             style={{
               background: 'var(--bg-card)',
