@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ShoppingBag, MessageCircle } from 'lucide-react';
+import { ShoppingBag, MessageCircle, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProduct, getStock } from '@/api/catalog';
 import { getShops } from '@/api/shops';
@@ -21,20 +21,25 @@ function StockShopRow({
   shop,
   quantity,
   isSelected,
+  onSelect,
 }: {
   shop: Shop;
   quantity: number;
   isSelected: boolean;
+  onSelect: () => void;
 }) {
   const inStock = quantity > 0;
-  function handleTap() {
+
+  function handleMapTap(e: React.MouseEvent) {
+    e.stopPropagation();
     haptic('light');
     openLink(`https://yandex.ru/maps/?text=${encodeURIComponent(shop.city + ' ' + shop.address)}`);
   }
+
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
-      onClick={handleTap}
+      onClick={() => { haptic('light'); onSelect(); }}
       className="flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer"
       style={{
         background: isSelected ? 'color-mix(in srgb, var(--brand-primary) 8%, var(--bg-card))' : 'var(--bg-card)',
@@ -44,14 +49,14 @@ function StockShopRow({
       }}
     >
       <div className="flex-1 min-w-0 mr-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
             {shop.address}
           </p>
           {isSelected && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
-              style={{ background: 'var(--brand-primary)', color: 'white' }}
+              style={{ background: 'var(--brand-primary)', color: 'var(--text-on-brand, white)' }}
             >
               Ваш магазин
             </span>
@@ -61,12 +66,22 @@ function StockShopRow({
           {shop.hours} · {shop.schedule}
         </p>
       </div>
-      <span
-        className="text-[12px] font-bold flex-shrink-0"
-        style={{ color: inStock ? 'var(--brand-primary)' : 'var(--text-secondary)' }}
-      >
-        {inStock ? `В наличии · ${quantity}` : 'Нет в наличии'}
-      </span>
+
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <span
+          className="text-[12px] font-bold"
+          style={{ color: inStock ? 'var(--brand-primary)' : 'var(--text-secondary)' }}
+        >
+          {inStock ? `В наличии · ${quantity}` : 'Нет'}
+        </span>
+        <button
+          onClick={handleMapTap}
+          className="flex items-center justify-center w-7 h-7 rounded-lg"
+          style={{ background: 'var(--border-soft)' }}
+        >
+          <MapPin size={13} strokeWidth={2} style={{ color: 'var(--brand-primary)' }} />
+        </button>
+      </div>
     </motion.div>
   );
 }
@@ -75,9 +90,11 @@ function StockShopRow({
 function StockBlock({
   stockId,
   selectedShopId,
+  onSelectShop,
 }: {
   stockId: string;
   selectedShopId?: string;
+  onSelectShop: (shop: Shop) => void;
 }) {
   const { data: stockItems, isLoading: stockLoading, isError: stockError } = useQuery({
     queryKey: ['stock', stockId],
@@ -177,6 +194,7 @@ function StockBlock({
                 shop={shop}
                 quantity={quantity}
                 isSelected={shop.id === selectedShopId}
+                onSelect={() => onSelectShop(shop)}
               />
             ))}
           </div>
@@ -267,7 +285,7 @@ function VariantPicker({
 export function ProductPage() {
   const { productId } = useParams<{ storeId: string; productId: string }>();
   const { items, add, increment, decrement } = useCartStore();
-  const { selectedShop } = useShopStore();
+  const { selectedShop, setShop } = useShopStore();
 
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
@@ -424,6 +442,7 @@ export function ProductPage() {
                 <StockBlock
                   stockId={stockId}
                   selectedShopId={selectedShop?.id}
+                  onSelectShop={setShop}
                 />
               </motion.div>
             </AnimatePresence>
