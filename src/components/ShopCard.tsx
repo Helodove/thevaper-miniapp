@@ -3,12 +3,21 @@ import { MapPin } from 'lucide-react';
 import { openLink } from '@/lib/telegram';
 import type { Shop } from '@/api/types';
 
-function ShopPlaceholder() {
-  return (
-    <div className="w-full overflow-hidden" style={{ aspectRatio: '1.4', background: '#EEF9F8' }}>
-      <img src="/shop-building.svg" alt="" className="w-full h-full object-cover" />
-    </div>
-  );
+const SHOP_IMAGES: Array<[string, string]> = [
+  ['катукова',            '/shops/katukova.png'],
+  ['8 марта',             '/shops/8marta.png'],
+  ['плеханова',           '/shops/plekhanov.png'],
+  ['космонавтов',         '/shops/kosmonavt.png'],
+  ['зои космодемьянской', '/shops/zoi.png'],
+  ['газина',              '/shops/gazina.png'],
+];
+
+function getShopImage(address: string): string {
+  const lower = address.toLowerCase();
+  for (const [key, src] of SHOP_IMAGES) {
+    if (lower.includes(key)) return src;
+  }
+  return '/shop-building.svg';
 }
 
 interface ShopCardProps {
@@ -22,6 +31,8 @@ export function ShopCard({ shop, onSelect }: ShopCardProps) {
     openLink(`https://yandex.ru/maps/?text=${encodeURIComponent(shop.city + ' ' + shop.address)}`);
   }
 
+  const imgSrc = shop.cover || getShopImage(shop.address);
+
   return (
     <motion.div
       whileTap={{ scale: 0.97 }}
@@ -33,11 +44,12 @@ export function ShopCard({ shop, onSelect }: ShopCardProps) {
         boxShadow: 'var(--shadow-card)',
       }}
     >
-      {shop.cover ? (
-        <img src={shop.cover} alt={shop.address} className="w-full object-cover" style={{ aspectRatio: '1.4' }} />
-      ) : (
-        <ShopPlaceholder />
-      )}
+      <img
+        src={imgSrc}
+        alt={shop.address}
+        className="w-full object-cover"
+        style={{ aspectRatio: '1.4' }}
+      />
       <div className="px-3 py-3 pb-4">
         <p className="text-[13px] font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
           {shop.address}
