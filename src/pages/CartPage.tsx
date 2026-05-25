@@ -56,7 +56,7 @@ export function CartPage() {
   }, {});
 
   const phoneDigits = phone.replace(/\D/g, '');
-  const canOrder = items.length > 0 && !!selectedShop && name.trim().length >= 2 && phoneDigits.length >= 11 && !ordering;
+  const canOrder = items.length > 0 && !!selectedShop && name.trim().length >= 2 && phoneDigits.length >= 11 && !ordering && unavailableCount === 0;
   const mainBtnText = ordering ? 'Отправляем...' : `Оформить заказ • ${formatPrice(total())}`;
 
   const handlePhoneChange = (val: string) => {

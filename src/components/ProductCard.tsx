@@ -26,9 +26,8 @@ export function ProductCard({ product, displayName }: { product: Product; displa
   const cartItem = items.find((i) => i.productId === product.id);
   const qty = cartItem?.quantity ?? 0;
 
-  // Данные inStock с API ненадёжны для вариантных товаров из МойСклад.
-  // Показываем лёгкое затемнение как подсказку, но блокировать корзину не будем.
-  const likelySoldOut = !product.inStock && !product.price;
+  // Нет в наличии: магазин выбран и остатки = 0, или цена = 0 (товар не продаётся)
+  const outOfStock = (!!selectedShop && !product.inStock) || (!product.inStock && !product.price);
 
   function handleAdd(e: React.MouseEvent) {
     e.stopPropagation();
@@ -54,7 +53,7 @@ export function ProductCard({ product, displayName }: { product: Product; displa
             src={product.images[0]}
             alt={product.name}
             className="w-full h-full object-cover transition-opacity"
-            style={{ opacity: likelySoldOut ? 0.4 : 1 }}
+            style={{ opacity: outOfStock ? 0.4 : 1 }}
             loading="lazy"
             onError={(e) => {
               const t = e.currentTarget;
@@ -64,7 +63,7 @@ export function ProductCard({ product, displayName }: { product: Product; displa
             }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ opacity: likelySoldOut ? 0.4 : 1 }}>
+          <div className="w-full h-full flex items-center justify-center" style={{ opacity: outOfStock ? 0.4 : 1 }}>
             <img src="/logo-thevaper-original.png" alt="" className="w-12 h-12 rounded-lg opacity-30" />
           </div>
         )}
@@ -85,7 +84,7 @@ export function ProductCard({ product, displayName }: { product: Product; displa
             {formatPrice(product.price)}
           </p>
 
-          {likelySoldOut ? (
+          {outOfStock ? (
             <span
               className="text-[10px] font-semibold rounded-lg px-2 py-1"
               style={{ background: 'rgba(0,0,0,0.05)', color: 'var(--text-secondary)' }}
