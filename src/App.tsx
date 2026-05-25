@@ -48,19 +48,30 @@ function AgeGate({ onConfirm }: { onConfirm: () => void }) {
 function BackButtonSync() {
   const location = useLocation();
   const navigate = useNavigate();
-  const app = tg();
 
   useEffect(() => {
+    const app = tg();
     if (!app) return;
+
     if (location.pathname === '/') {
       app.BackButton.hide();
-    } else {
-      app.BackButton.show();
-      const handler = () => navigate(-1);
-      app.BackButton.onClick(handler);
-      return () => app.BackButton.offClick(handler);
+      return;
     }
-  }, [location.pathname, app, navigate]);
+
+    app.BackButton.show();
+    const handler = () => {
+      // Если история пуста — идём на главную, иначе назад
+      if ((window.history.state?.idx ?? 0) > 0) {
+        navigate(-1);
+      } else {
+        navigate('/');
+      }
+    };
+    app.BackButton.onClick(handler);
+    return () => app.BackButton.offClick(handler);
+  // navigate и tg() — стабильные ссылки, достаточно pathname
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   return null;
 }
