@@ -10,6 +10,7 @@ export type Category = {
 export type ProductVariant = {
   id: string;
   color: string;
+  image?: string | null;
 };
 
 export type Product = {
@@ -23,6 +24,7 @@ export type Product = {
   oldPrice?: number;
   images: string[];
   inStock: boolean;
+  stockQty?: number | null;
   stockByShop?: Record<string, number>;
   description?: string;
   variants?: ProductVariant[];

@@ -307,18 +307,33 @@ export function ProductPage() {
   });
 
   const hasVariants = (product?.variants?.length ?? 0) > 0;
+  const selectedVariant = product?.variants?.find((v) => v.id === selectedVariantId);
 
   // Для варианта в корзине: если выбран цвет — добавляем вариант, иначе — родительский товар
   const cartId = selectedVariantId ?? productId!;
   const cartItem = items.find((i) => i.productId === cartId);
   const qty = cartItem?.quantity ?? 0;
 
+  // stockId: если выбран вариант — запрашиваем по нему, иначе — по родительскому товару
+  const stockId = selectedVariantId ?? productId!;
+
+  const { data: stockItems } = useQuery({
+    queryKey: ['stock', stockId],
+    queryFn: () => getStock(stockId),
+    staleTime: STALE.stock,
+    enabled: !!stockId && !!selectedShop,
+  });
+
+  const maxQty = selectedShop && stockItems
+    ? (stockItems.find((s) => s.shopId === selectedShop.id)?.quantity)
+    : undefined;
+
   function handleAdd() {
     if (!product) return;
     haptic('medium');
-    const variant = product.variants?.find((v) => v.id === selectedVariantId);
-    const name = variant ? `${product.name} (${variant.color})` : product.name;
-    add({ productId: cartId, name, price: product.price, image: product.images[0] });
+    const name = selectedVariant ? `${product.name} (${selectedVariant.color})` : product.name;
+    const image = selectedVariant?.image || product.images[0];
+    add({ productId: cartId, name, price: product.price, image });
   }
 
   if (isLoading) {
@@ -347,31 +362,47 @@ export function ProductPage() {
     );
   }
 
-  // stockId: если выбран вариант — запрашиваем по нему, иначе — по родительскому товару
-  const stockId = selectedVariantId ?? productId!;
-
   return (
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh', paddingBottom: 100 }}>
       {/* Фото */}
-      <div className="w-full aspect-square relative overflow-hidden" style={{ background: 'var(--brand-gradient)' }}>
-        {product.images[0] ? (
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="w-full h-full object-contain p-6"
-            onError={(e) => {
-              const t = e.currentTarget;
-              t.onerror = null;
-              t.src = '/logo-thevaper-original.png';
-              t.className = 'w-24 h-24 rounded-2xl opacity-60 m-auto';
-            }}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <img src="/logo-thevaper-original.png" alt="" className="w-24 h-24 rounded-2xl opacity-60" />
+      {(() => {
+        const displayImage = selectedVariant?.image || product.images[0] || null;
+        return (
+          <div className="w-full aspect-square relative overflow-hidden" style={{ background: 'var(--brand-gradient)' }}>
+            <AnimatePresence mode="wait">
+              {displayImage ? (
+                <motion.img
+                  key={displayImage}
+                  initial={{ opacity: 0, scale: 1.04 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ duration: 0.2 }}
+                  src={displayImage}
+                  alt={product.name}
+                  className="absolute inset-0 w-full h-full object-contain p-6"
+                  onError={(e) => {
+                    const t = e.currentTarget;
+                    t.onerror = null;
+                    t.src = '/logo-thevaper-original.png';
+                    t.style.padding = '0';
+                    t.className = 'absolute inset-0 w-24 h-24 rounded-2xl opacity-60 m-auto';
+                  }}
+                />
+              ) : (
+                <motion.div
+                  key="placeholder"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <img src="/logo-thevaper-original.png" alt="" className="w-24 h-24 rounded-2xl opacity-60" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Контент */}
       <div className="px-4 pt-5">
@@ -494,6 +525,7 @@ export function ProductPage() {
         ) : (
           <QuantityStepper
             quantity={qty}
+            max={maxQty}
             onIncrement={() => { haptic('light'); increment(cartId); }}
             onDecrement={() => { haptic('light'); decrement(cartId); }}
           />
