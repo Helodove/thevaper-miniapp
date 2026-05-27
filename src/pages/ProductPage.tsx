@@ -366,7 +366,9 @@ export function ProductPage() {
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh', paddingBottom: 100 }}>
       {/* Фото */}
       {(() => {
-        const displayImage = selectedVariant?.image || product.images[0] || null;
+        const variantImage = selectedVariant?.image ?? null;
+        const displayImage = variantImage || product.images[0] || null;
+        const productFallback = product.images[0] ?? null;
         return (
           <div className="w-full aspect-square relative overflow-hidden" style={{ background: 'var(--brand-gradient)' }}>
             <AnimatePresence mode="wait">
@@ -383,9 +385,14 @@ export function ProductPage() {
                   onError={(e) => {
                     const t = e.currentTarget;
                     t.onerror = null;
-                    t.src = '/logo-thevaper-original.png';
-                    t.style.padding = '0';
-                    t.className = 'absolute inset-0 w-24 h-24 rounded-2xl opacity-60 m-auto';
+                    // Если упала картинка варианта — пробуем фото товара
+                    if (productFallback && t.src !== productFallback) {
+                      t.src = productFallback;
+                    } else {
+                      t.src = '/logo-thevaper-original.png';
+                      t.style.padding = '0';
+                      t.className = 'absolute inset-0 w-24 h-24 rounded-2xl opacity-60 m-auto';
+                    }
                   }}
                 />
               ) : (
