@@ -8,17 +8,31 @@ const RAILWAY_URL = 'https://vape-catalog-bot-helodove.amvera.io';
 const STRIP_PREFIXES = [
   'Жидкость ', 'Испаритель ', 'Испаритель(и) ',
   'Картридж ', 'Картридж(и) ', 'ЭОП ', 'Устройство ',
+  'Табак для кальяна ', 'Кальянный табак ', 'Табак кальянный ',
 ];
+
+const TOBACCO_PREFIXES = new Set([
+  'Табак для кальяна ', 'Кальянный табак ', 'Табак кальянный ',
+]);
 
 function extractLine(raw: string): string {
   let n = raw.trim();
+  let isTobacco = false;
   for (const p of STRIP_PREFIXES) {
-    if (n.startsWith(p)) { n = n.slice(p.length); break; }
+    if (n.startsWith(p)) {
+      isTobacco = TOBACCO_PREFIXES.has(p);
+      n = n.slice(p.length);
+      break;
+    }
   }
-  // Убираем вкус/цвет в скобках в конце: "OGGO MAX (Арбуз)" → "OGGO MAX"
+  // Убираем вкус/цвет в скобках: "OGGO MAX (Арбуз)" → "OGGO MAX"
   n = n.replace(/\s*\([^)]*\)\s*$/, '').trim();
-  // Убираем технические параметры в конце: "0.47л пэт", "0.4 Ohm", "1000 mAh", "50 мл"
-  n = n.replace(/\s+[\d.,]+\s*(мл|л|ml|l|мг|mg|ohm|ом|mah|puff|затяжк|%)\b\s*\S*\s*$/i, '').trim();
+  // Убираем вес и технические параметры в конце: "25 гр", "50 г", "0.4 Ohm"
+  n = n.replace(/\s+[\d.,]+\s*(гр\.?|г\.?|мл|л|ml|l|мг|mg|ohm|ом|mah|puff|затяжк|%)\b.*$/i, '').trim();
+  // Для табака оставляем только бренд (первое слово) — одна фото покрывает все вкусы
+  if (isTobacco && n.includes(' ')) {
+    n = n.split(' ')[0];
+  }
   return n || raw.trim();
 }
 
