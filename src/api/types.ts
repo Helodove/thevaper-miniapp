@@ -28,6 +28,7 @@ export type Product = {
   stockByShop?: Record<string, number>;
   description?: string;
   variants?: ProductVariant[];
+  hasVariants?: boolean;
 };
 
 export type Shop = {

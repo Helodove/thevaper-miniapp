@@ -29,8 +29,18 @@ export function ProductCard({ product, displayName }: { product: Product; displa
   // Нет в наличии: магазин выбран и остатки = 0, или цена = 0 (товар не продаётся)
   const outOfStock = (!!selectedShop && !product.inStock) || (!product.inStock && !product.price);
 
+  // Лимит по остатку: только когда выбран магазин и stockQty известен
+  const maxQty = selectedShop && typeof product.stockQty === 'number' ? product.stockQty : undefined;
+  const atMax = maxQty !== undefined && qty >= maxQty;
+
   function handleAdd(e: React.MouseEvent) {
     e.stopPropagation();
+    // Если есть варианты — ведём на карточку товара для выбора
+    if (product.hasVariants) {
+      if (selectedShop) navigate(`/store/${selectedShop.id}/product/${product.id}`);
+      else navigate(`/product/${product.id}`);
+      return;
+    }
     haptic('light');
     add({ productId: product.id, name: product.name, price: product.price, image: product.images[0] });
   }
@@ -116,10 +126,10 @@ export function ProductCard({ product, displayName }: { product: Product; displa
                     {qty}
                   </span>
                   <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => { e.stopPropagation(); haptic('light'); increment(product.id); }}
+                    whileTap={atMax ? {} : { scale: 0.9 }}
+                    onClick={(e) => { e.stopPropagation(); if (!atMax) { haptic('light'); increment(product.id); } }}
                     className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: 'var(--brand-primary)' }}
+                    style={{ background: 'var(--brand-primary)', opacity: atMax ? 0.35 : 1 }}
                   >
                     <Plus size={13} strokeWidth={2.5} color="white" />
                   </motion.button>
