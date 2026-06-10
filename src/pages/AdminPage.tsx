@@ -23,6 +23,8 @@ export function AdminPage() {
   const [uploadError, setUploadError] = useState('');
   const [search, setSearch] = useState('');
   const [rowUploading, setRowUploading] = useState<number | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ added: number; lines: string[] } | null>(null);
 
   const load = useCallback(async (pw: string) => {
     setLoading(true);
@@ -31,7 +33,7 @@ export function AdminPage() {
       const r = await fetch(`${API}?password=${encodeURIComponent(pw)}`);
       if (r.status === 401) { setError('Неверный пароль'); setAuthed(false); return; }
       const data = await r.json();
-      setRows(data);
+      setRows(data.filter((r: ImageRow) => r.note !== '__deleted__'));
       setAuthed(true);
       sessionStorage.setItem('admin_pw', pw);
     } catch {
@@ -131,6 +133,24 @@ export function AdminPage() {
     e.target.value = '';
   }
 
+  async function handleSync() {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const r = await fetch('/api/admin-sync', {
+        method: 'POST',
+        headers: { 'x-admin-password': password },
+      });
+      const data = await r.json();
+      setSyncResult(data);
+      await load(password);
+    } catch {
+      setSyncResult({ added: -1, lines: [] });
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   async function handleDelete(id: number) {
     if (!confirm('Удалить эту запись?')) return;
     await fetch(`${API}?password=${encodeURIComponent(password)}&id=${id}`, { method: 'DELETE' });
@@ -178,6 +198,13 @@ export function AdminPage() {
           {rows.length} записей
         </span>
         <button
+          onClick={handleSync}
+          disabled={syncing}
+          style={{ background: syncing ? '#2a2a2a' : '#1fbfad22', color: syncing ? '#555' : '#1fbfad', border: '1px solid #1fbfad44', borderRadius: 8, padding: '6px 14px', cursor: syncing ? 'default' : 'pointer', fontSize: 13, fontWeight: 600 }}
+        >
+          {syncing ? '⏳ Синхронизация...' : '🔄 Синхронизировать'}
+        </button>
+        <button
           onClick={() => { sessionStorage.removeItem('admin_pw'); setAuthed(false); }}
           style={{ background: '#2a2a2a', color: '#888', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontSize: 13 }}
         >
@@ -186,6 +213,30 @@ export function AdminPage() {
       </div>
 
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px' }}>
+
+        {/* Результат синхронизации */}
+        {syncResult && (
+          <div style={{
+            background: syncResult.added < 0 ? '#2a1a1a' : syncResult.added === 0 ? '#1a1a2a' : '#1a2a1a',
+            border: `1px solid ${syncResult.added < 0 ? '#ff6b6b44' : syncResult.added === 0 ? '#1fbfad44' : '#2ecc7144'}`,
+            borderRadius: 12, padding: 16, marginBottom: 20,
+          }}>
+            {syncResult.added < 0 && <p style={{ color: '#ff6b6b', margin: 0, fontSize: 14 }}>❌ Ошибка синхронизации</p>}
+            {syncResult.added === 0 && <p style={{ color: '#1fbfad', margin: 0, fontSize: 14 }}>✅ Все линейки уже есть — ничего нового</p>}
+            {syncResult.added > 0 && (
+              <>
+                <p style={{ color: '#2ecc71', margin: '0 0 8px', fontSize: 14, fontWeight: 700 }}>
+                  ✅ Добавлено {syncResult.added} новых линеек — добавьте им фото
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {syncResult.lines.map((l) => (
+                    <span key={l} style={{ background: '#2a3a2a', color: '#aaa', fontSize: 12, padding: '3px 8px', borderRadius: 6 }}>{l}</span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Форма добавления */}
         <div style={{ background: '#1a1a1a', borderRadius: 16, padding: 20, marginBottom: 24 }}>

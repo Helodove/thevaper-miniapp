@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ShoppingBag, MessageCircle, MapPin } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, MessageCircle, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProduct, getStock } from '@/api/catalog';
 import { getShops } from '@/api/shops';
@@ -284,7 +284,8 @@ function VariantPicker({
 // ─── ProductPage ──────────────────────────────────────────────────────────────
 export function ProductPage() {
   const { productId } = useParams<{ storeId: string; productId: string }>();
-  const { items, add, increment, decrement } = useCartStore();
+  const navigate = useNavigate();
+  const { items, add, increment, decrement, count } = useCartStore();
   const { selectedShop, setShop } = useShopStore();
 
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
@@ -370,7 +371,7 @@ export function ProductPage() {
         const displayImage = variantImage || product.images[0] || null;
         const productFallback = product.images[0] ?? null;
         return (
-          <div className="w-full aspect-square relative overflow-hidden" style={{ background: 'var(--brand-gradient)' }}>
+          <div className="w-full aspect-square relative overflow-hidden" style={{ background: '#FFFFFF' }}>
             <AnimatePresence mode="wait">
               {displayImage ? (
                 <motion.img
@@ -530,12 +531,28 @@ export function ProductPage() {
             В корзину
           </motion.button>
         ) : (
-          <QuantityStepper
-            quantity={qty}
-            max={maxQty}
-            onIncrement={() => { haptic('light'); increment(cartId); }}
-            onDecrement={() => { haptic('light'); decrement(cartId); }}
-          />
+          <div className="flex items-center gap-2">
+            <QuantityStepper
+              quantity={qty}
+              max={maxQty}
+              onIncrement={() => { haptic('light'); increment(cartId); }}
+              onDecrement={() => { haptic('light'); decrement(cartId); }}
+            />
+            <motion.button
+              whileTap={{ scale: 0.94 }}
+              onClick={() => { haptic('light'); navigate('/cart'); }}
+              className="relative flex items-center justify-center w-[48px] h-[48px] rounded-2xl text-white flex-shrink-0"
+              style={{ background: 'var(--brand-primary)' }}
+            >
+              <ShoppingCart size={20} strokeWidth={1.75} />
+              <span
+                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
+                style={{ background: 'var(--text-primary)', color: 'var(--bg-card)' }}
+              >
+                {count()}
+              </span>
+            </motion.button>
+          </div>
         )}
       </div>
     </div>

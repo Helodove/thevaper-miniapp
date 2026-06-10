@@ -150,9 +150,14 @@ export function CartPage() {
 
         {/* Товары */}
         <AnimatePresence>
-          {items.map((item) => {
+          {items.map((item, i) => {
             const avail = stockStatus.get(item.productId);
             const unavailable = avail === false;
+            const stockQ = stockQueries[i];
+            const shopStock = selectedShop && stockQ.data
+              ? stockQ.data.find((s) => s.shopId === selectedShop.id)
+              : undefined;
+            const maxQty = shopStock?.quantity;
             return (
               <motion.div
                 key={item.productId}
@@ -206,6 +211,7 @@ export function CartPage() {
                 <div className="flex items-center gap-2">
                   <QuantityStepper
                     quantity={item.quantity}
+                    max={maxQty}
                     onIncrement={() => increment(item.productId)}
                     onDecrement={() => decrement(item.productId)}
                   />

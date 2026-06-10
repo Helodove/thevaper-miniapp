@@ -4,11 +4,13 @@ import { haptic } from '@/lib/telegram';
 
 type Props = {
   quantity: number;
+  max?: number;
   onIncrement: () => void;
   onDecrement: () => void;
 };
 
-export function QuantityStepper({ quantity, onIncrement, onDecrement }: Props) {
+export function QuantityStepper({ quantity, max, onIncrement, onDecrement }: Props) {
+  const atMax = max !== undefined && quantity >= max;
   return (
     <motion.div
       layout
@@ -32,10 +34,10 @@ export function QuantityStepper({ quantity, onIncrement, onDecrement }: Props) {
         {quantity}
       </motion.span>
       <motion.button
-        whileTap={{ scale: 0.88 }}
-        onClick={() => { haptic('light'); onIncrement(); }}
+        whileTap={atMax ? {} : { scale: 0.88 }}
+        onClick={() => { if (!atMax) { haptic('light'); onIncrement(); } }}
         className="w-10 h-10 rounded-xl flex items-center justify-center"
-        style={{ background: 'var(--brand-primary)' }}
+        style={{ background: 'var(--brand-primary)', opacity: atMax ? 0.35 : 1 }}
       >
         <Plus size={18} strokeWidth={2.5} color="white" />
       </motion.button>

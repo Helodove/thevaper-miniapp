@@ -77,11 +77,15 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
-  // DELETE — удалить по id
+  // DELETE — мягкое удаление: ставим метку, чтобы синхронизация не добавляла снова
   if (req.method === 'DELETE') {
     const id = url.searchParams.get('id');
     if (!id) return new Response('Missing id', { status: 400 });
-    await fetch(`${base}?id=eq.${id}`, { method: 'DELETE', headers: sbHeaders() });
+    await fetch(`${base}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({ note: '__deleted__' }),
+    });
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
     });
