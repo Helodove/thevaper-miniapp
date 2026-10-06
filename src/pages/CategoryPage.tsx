@@ -10,69 +10,37 @@ import { ErrorState } from '@/components/ui/EmptyState';
 import { STALE } from '@/lib/queryClient';
 import { sortByStock } from '@/lib/sortByStock';
 import { useShopStore } from '@/store/shop';
-import { getCategoryTitle } from '@/lib/categoryCovers';
-import { haptic } from '@/lib/telegram';
+import { getCategoryTitle, getCategoryTileStyle, type CategoryTileStyle } from '@/lib/categoryCovers';
+import { haptic, getColorScheme } from '@/lib/telegram';
+import { CategoryIcon } from '@/components/CategoryIcon';
 import { track } from '@/lib/analytics/track';
 
-const SUBCATEGORY_ANGLES = [135, 150, 120, 160, 125, 145, 115, 155];
-
-function SubcategoryCard({ title, index, onTap }: { title: string; index: number; onTap: () => void }) {
-  const angle = SUBCATEGORY_ANGLES[index % SUBCATEGORY_ANGLES.length];
-  const useLime = index % 3 === 2;
-  const gradient = useLime
-    ? `linear-gradient(${angle}deg, #1FBFAD 0%, #B9F36C 100%)`
-    : `linear-gradient(${angle}deg, #169E8E 0%, #1FBFAD 100%)`;
-  const letterColor = useLime ? '#0F2E2A' : '#ffffff';
-
+// Плитка подкатегории (бренда) в цвете родительской категории — в стиле плиток главной.
+function SubcategoryCard({ title, tile, dark, onTap }: {
+  title: string;
+  tile: CategoryTileStyle;
+  dark: boolean;
+  onTap: () => void;
+}) {
   return (
     <motion.div
       whileTap={{ scale: 0.96 }}
       transition={{ type: 'spring', stiffness: 320, damping: 22 }}
       onClick={onTap}
-      className="relative overflow-hidden cursor-pointer flex flex-col"
+      className="relative overflow-hidden cursor-pointer p-3.5"
       style={{
         borderRadius: 'var(--radius-card)',
-        boxShadow: 'var(--shadow-elevated)',
-        background: 'var(--bg-card)',
-        aspectRatio: '1',
+        background: dark ? tile.tintDark : tile.tint,
+        color: dark ? tile.inkDark : tile.ink,
+        aspectRatio: '1.45',
       }}
     >
-      {/* Верхняя градиентная зона */}
-      <div
-        className="relative flex-shrink-0 overflow-hidden"
-        style={{ height: '58%', background: gradient }}
-      >
-        {/* Крупная буква как текстура */}
-        <span
-          className="absolute inset-0 flex items-end justify-end pr-2 pb-1 text-[90px] font-black select-none leading-none"
-          style={{ color: letterColor, opacity: 0.18, letterSpacing: '-4px' }}
-        >
-          {title[0]?.toUpperCase()}
-        </span>
-        {/* Скруглённый выступ снизу */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-4"
-          style={{
-            background: 'var(--bg-card)',
-            borderRadius: '50% 50% 0 0 / 100% 100% 0 0',
-          }}
-        />
-      </div>
-
-      {/* Нижняя белая зона */}
-      <div className="flex flex-col justify-between flex-1 px-3 pt-1 pb-3">
-        <p
-          className="text-[14px] font-extrabold leading-tight"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          {title}
-        </p>
-        {/* Маленький акцентный штрих */}
-        <div
-          className="h-[3px] w-8 rounded-full"
-          style={{ background: gradient }}
-        />
-      </div>
+      <p className="relative z-[1] text-[15px] font-extrabold leading-tight max-w-[85%] break-words">{title}</p>
+      <CategoryIcon
+        name={tile.icon}
+        strokeWidth={1.5}
+        className="absolute -right-2 -bottom-3 w-[46%] h-[70%] opacity-30"
+      />
     </motion.div>
   );
 }
@@ -110,6 +78,10 @@ export function CategoryPage() {
 
   // Название: корневая категория → из списка; подкатегория → из state навигации
   const stateTitle: string | undefined = (location.state as any)?.title;
+  // Цвет и иконка — от корневой категории; в подкатегорию она передаётся через state
+  const styleTitle: string = rootTitle ?? (location.state as any)?.rootTitle ?? stateTitle ?? '';
+  const tile = getCategoryTileStyle(styleTitle);
+  const dark = getColorScheme() === 'dark';
   const displayTitle = rootTitle
     ? getCategoryTitle(rootTitle)
     : stateTitle ?? '...';
@@ -152,8 +124,12 @@ export function CategoryPage() {
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh' }}>
       <BrandHeader />
 
-      <div className="px-4 py-4" style={{ background: 'var(--brand-primary)' }}>
-        <h1 className="text-[22px] font-extrabold text-white tracking-tight">{displayTitle}</h1>
+      <div
+        className="px-4 py-4 flex items-center justify-between gap-3"
+        style={{ background: dark ? tile.tintDark : tile.tint, color: dark ? tile.inkDark : tile.ink }}
+      >
+        <h1 className="text-[22px] font-extrabold tracking-tight leading-tight">{displayTitle}</h1>
+        <CategoryIcon name={tile.icon} strokeWidth={1.6} className="flex-shrink-0 w-11 h-11" />
       </div>
 
       {/* Режим подкатегорий */}
@@ -175,10 +151,11 @@ export function CategoryPage() {
                 >
                   <SubcategoryCard
                     title={sub.title}
-                    index={i}
+                    tile={tile}
+                    dark={dark}
                     onTap={() => {
                       haptic('light');
-                      navigate(`/store/${storeId}/category/${sub.id}`, { state: { title: sub.title } });
+                      navigate(`/store/${storeId}/category/${sub.id}`, { state: { title: sub.title, rootTitle: styleTitle } });
                     }}
                   />
                 </motion.div>
@@ -214,7 +191,7 @@ export function CategoryPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: Math.min(i * 0.03, 0.3) }}
                     >
-                      <ProductCard product={product} displayName={getShortName(product.name)} />
+                      <ProductCard product={product} displayName={getShortName(product.name)} tile={tile} />
                     </motion.div>
                   ))}
             </div>

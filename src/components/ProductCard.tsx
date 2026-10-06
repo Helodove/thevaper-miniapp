@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Minus } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
 import { useShopStore } from '@/store/shop';
 import { formatPrice } from '@/lib/format';
-import { haptic } from '@/lib/telegram';
+import { haptic, getColorScheme } from '@/lib/telegram';
+import { CategoryIcon } from '@/components/CategoryIcon';
+import type { CategoryTileStyle } from '@/lib/categoryCovers';
 import type { Product } from '@/api/types';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,8 +22,14 @@ function cardName(name: string): string {
   return name;
 }
 
-export function ProductCard({ product, displayName }: { product: Product; displayName?: string }) {
+export function ProductCard({ product, displayName, tile }: {
+  product: Product;
+  displayName?: string;
+  tile?: CategoryTileStyle; // стиль категории — для заглушки, если у товара нет фото
+}) {
   const navigate = useNavigate();
+  const [imageFailed, setImageFailed] = useState(false);
+  const dark = getColorScheme() === 'dark';
   const { items, add, increment, decrement } = useCartStore();
   const { selectedShop } = useShopStore();
   const cartItem = items.find((i) => i.productId === product.id);
@@ -58,24 +67,39 @@ export function ProductCard({ product, displayName }: { product: Product; displa
     >
       {/* Фото */}
       <div className="relative aspect-square overflow-hidden" style={{ background: 'var(--border-soft)' }}>
-        {product.images[0] ? (
+        {product.images[0] && !imageFailed ? (
           <img
             src={product.images[0]}
             alt={product.name}
             className="w-full h-full object-cover transition-opacity"
             style={{ opacity: outOfStock ? 0.4 : 1 }}
             loading="lazy"
-            onError={(e) => {
-              const t = e.currentTarget;
-              t.onerror = null;
-              t.src = '/logo-thevaper-original.png';
-              t.className = 'w-12 h-12 rounded-lg opacity-30 m-auto';
-            }}
+            onError={() => setImageFailed(true)}
           />
+        ) : tile ? (
+          // Нет фото — иконка категории в её цвете
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{
+              background: dark ? tile.tintDark : tile.tint,
+              color: dark ? tile.inkDark : tile.ink,
+              opacity: outOfStock ? 0.45 : 1,
+            }}
+          >
+            <CategoryIcon name={tile.icon} strokeWidth={1.4} className="w-1/2 h-1/2 opacity-60" />
+          </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center" style={{ opacity: outOfStock ? 0.4 : 1 }}>
             <img src="/logo-thevaper-original.png" alt="" className="w-12 h-12 rounded-lg opacity-30" />
           </div>
+        )}
+        {outOfStock && (
+          <span
+            className="absolute left-2 top-2 text-[11px] font-semibold rounded-lg px-2 py-1 whitespace-nowrap"
+            style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)' }}
+          >
+            Нет в наличии
+          </span>
         )}
       </div>
 
@@ -89,19 +113,12 @@ export function ProductCard({ product, displayName }: { product: Product; displa
             {product.flavor}
           </p>
         )}
-        <div className="flex items-end justify-between mt-2">
+        <div className="flex items-end justify-between mt-2 min-h-8">
           <p className="text-[16px] font-extrabold price" style={{ color: 'var(--brand-primary)' }}>
             {formatPrice(product.price)}
           </p>
 
-          {outOfStock ? (
-            <span
-              className="text-[10px] font-semibold rounded-lg px-2 py-1"
-              style={{ background: 'rgba(0,0,0,0.05)', color: 'var(--text-secondary)' }}
-            >
-              Нет в наличии
-            </span>
-          ) : (
+          {outOfStock ? null : (
             <div onClick={(e) => e.stopPropagation()}>
               {qty === 0 ? (
                 <motion.button
