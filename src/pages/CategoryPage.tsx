@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -12,6 +12,7 @@ import { sortByStock } from '@/lib/sortByStock';
 import { useShopStore } from '@/store/shop';
 import { getCategoryTitle } from '@/lib/categoryCovers';
 import { haptic } from '@/lib/telegram';
+import { track } from '@/lib/analytics/track';
 
 const SUBCATEGORY_ANGLES = [135, 150, 120, 160, 125, 145, 115, 155];
 
@@ -83,6 +84,10 @@ export function CategoryPage() {
   const location = useLocation();
   const [inStock, setInStock] = useState(true);
   const { selectedShop } = useShopStore();
+
+  useEffect(() => {
+    if (categoryId) track('category_open', { store_id: storeId, meta: { category_id: categoryId } });
+  }, [categoryId, storeId]);
 
   // Заголовок из корневых категорий (для первого уровня)
   const { data: rootCategories } = useQuery({

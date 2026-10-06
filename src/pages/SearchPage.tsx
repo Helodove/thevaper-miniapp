@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -12,6 +12,7 @@ import { sortByStock } from '@/lib/sortByStock';
 import { useShopStore } from '@/store/shop';
 import { haptic } from '@/lib/telegram';
 import { STALE } from '@/lib/queryClient';
+import { track } from '@/lib/analytics/track';
 
 const HISTORY_KEY = 'thevaper-search-history';
 const MAX_HISTORY = 5;
@@ -65,6 +66,19 @@ export function SearchPage() {
   useEffect(() => {
     if (query.length >= 2 && data) saveHistory(query);
   }, [data]);
+
+  // Аналитика: один search на каждый уникальный (запрос, магазин) после получения результатов
+  const lastTrackedSearch = useRef('');
+  useEffect(() => {
+    if (!data || debouncedQuery.length < 2) return;
+    const key = `${debouncedQuery}|${selectedShop?.id ?? ''}`;
+    if (lastTrackedSearch.current === key) return;
+    lastTrackedSearch.current = key;
+    track('search', {
+      store_id: selectedShop?.id,
+      meta: { query: debouncedQuery.trim(), results_count: data.total ?? data.items.length },
+    });
+  }, [data, debouncedQuery, selectedShop?.id]);
 
   const sorted = useMemo(() => {
     const items = data?.items ?? [];

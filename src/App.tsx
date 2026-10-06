@@ -12,6 +12,22 @@ import { CartPage } from '@/pages/CartPage';
 import { SearchPage } from '@/pages/SearchPage';
 import { AdminPage } from '@/pages/AdminPage';
 import { TopLoadingBar } from '@/components/TopLoadingBar';
+import { track } from '@/lib/analytics/track';
+
+let appOpenTracked = false; // StrictMode в dev вызывает эффекты дважды
+
+function trackAppOpen() {
+  if (appOpenTracked) return;
+  appOpenTracked = true;
+  const app = tg();
+  const startParam = app?.initDataUnsafe?.start_param;
+  track('app_open', {
+    meta: {
+      platform: app?.platform || 'unknown',
+      start_param: typeof startParam === 'string' ? startParam : undefined,
+    },
+  });
+}
 
 function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   const app = tg();
@@ -84,6 +100,7 @@ export default function App() {
 
   useEffect(() => {
     initTelegram();
+    trackAppOpen();
     const scheme = getColorScheme();
     document.documentElement.classList.toggle('dark', scheme === 'dark');
   }, []);

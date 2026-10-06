@@ -14,6 +14,7 @@ interface TelegramWebApp {
   setHeaderColor: (color: string) => void;
   setBackgroundColor: (color: string) => void;
   colorScheme: 'light' | 'dark';
+  platform?: string;
   initData: string;
   initDataUnsafe: Record<string, unknown>;
   MainButton: {

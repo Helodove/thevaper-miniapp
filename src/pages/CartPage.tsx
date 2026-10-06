@@ -15,6 +15,7 @@ import { QuantityStepper } from '@/components/QuantityStepper';
 import { BottomSheet } from '@/components/BottomSheet';
 import { EmptyCart } from '@/components/ui/EmptyState';
 import { STALE } from '@/lib/queryClient';
+import { track } from '@/lib/analytics/track';
 import type { Shop } from '@/api/types';
 
 export function CartPage() {
@@ -77,8 +78,13 @@ export function CartPage() {
       });
       setOrderDone({ orderId: result.orderId, total: result.total });
       clear();
-    } catch {
+    } catch (e) {
       haptic('error');
+      // Ошибка, которую видит покупатель (в т.ч. сеть). Серверные сбои сервер пишет сам (meta.src)
+      track('reserve_error', {
+        store_id: selectedShop?.id,
+        meta: { error: e instanceof Error ? e.message : String(e) },
+      });
     } finally {
       setOrdering(false);
     }

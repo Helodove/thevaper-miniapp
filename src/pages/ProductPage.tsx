@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ShoppingBag, ShoppingCart, MessageCircle, MapPin } from 'lucide-react';
@@ -7,6 +7,7 @@ import { getProduct, getStock } from '@/api/catalog';
 import { getShops } from '@/api/shops';
 import { formatPrice } from '@/lib/format';
 import { haptic, openLink } from '@/lib/telegram';
+import { track } from '@/lib/analytics/track';
 import { useCartStore } from '@/store/cart';
 import { useShopStore } from '@/store/shop';
 import { QuantityStepper } from '@/components/QuantityStepper';
@@ -318,12 +319,29 @@ export function ProductPage() {
   // stockId: если выбран вариант — запрашиваем по нему, иначе — по родительскому товару
   const stockId = selectedVariantId ?? productId!;
 
-  const { data: stockItems } = useQuery({
+  const { data: stockItems, isError: stockError } = useQuery({
     queryKey: ['stock', stockId],
     queryFn: () => getStock(stockId),
     staleTime: STALE.stock,
     enabled: !!stockId && !!selectedShop,
   });
+
+  // Аналитика: один product_view на открытие карточки. Наличие — в выбранном магазине
+  // (ждём остатки), без выбранного магазина — общий признак товара.
+  const viewTrackedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!product || !productId || viewTrackedFor.current === productId) return;
+    if (selectedShop && !stockItems && !stockError) return;
+    viewTrackedFor.current = productId;
+    const inStock = selectedShop && stockItems
+      ? (stockItems.find((s) => s.shopId === selectedShop.id)?.quantity ?? 0) > 0
+      : product.inStock;
+    track('product_view', {
+      product_id: productId,
+      store_id: selectedShop?.id,
+      meta: { in_stock: inStock, name: product.name },
+    });
+  }, [product, productId, selectedShop, stockItems, stockError]);
 
   const maxQty = selectedShop && stockItems
     ? (stockItems.find((s) => s.shopId === selectedShop.id)?.quantity)

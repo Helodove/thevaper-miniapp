@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE ?? 'https://api.thevaper.bot/v1';
+export const BASE_URL = import.meta.env.VITE_API_BASE ?? 'https://api.thevaper.bot/v1';
 
 function getInitData(): string {
   try {
