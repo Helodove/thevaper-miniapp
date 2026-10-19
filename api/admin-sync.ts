@@ -3,7 +3,7 @@ export const config = { runtime: 'edge' };
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY!;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'thevaper2026';
-const RAILWAY_URL = 'https://vape-catalog-bot-helodove.amvera.io';
+const RAILWAY_URL = 'https://vape-catalog-bot-helodove.msk1.amvera.tech';
 
 const STRIP_PREFIXES = [
   'Жидкость ', 'Испаритель ', 'Испаритель(и) ',
